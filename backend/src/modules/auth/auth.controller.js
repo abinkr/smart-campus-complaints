@@ -1,0 +1,63 @@
+import * as authService from './auth.service.js'
+import { ApiResponse } from '../../utils/ApiResponse.js'
+import { UnauthorizedError } from '../../utils/ApiError.js'
+import { clearRefreshTokenCookie, setRefreshTokenCookie } from './token.service.js'
+
+export const registerStudent = async (req, res) => {
+  const user = await authService.registerUser(req.body, { expectedRole: 'STUDENT' })
+  return ApiResponse.created(res, user, 'Student account created successfully')
+}
+
+export const registerAdmin = async (req, res) => {
+  const user = await authService.registerUser(req.body, { expectedRole: 'ADMIN' })
+  return ApiResponse.created(res, user, 'Admin account created successfully')
+}
+
+export const loginStudent = async (req, res) => {
+  const result = await authService.loginUser(req.body, { expectedRole: 'STUDENT' })
+  return ApiResponse.ok(res, result, 'Student verification code sent')
+}
+
+export const loginAdmin = async (req, res) => {
+  const result = await authService.loginUser(req.body, { expectedRole: 'ADMIN' })
+  return ApiResponse.ok(res, result, 'Admin verification code sent')
+}
+
+export const verifyStudentMfa = async (req, res) => {
+  const { refreshToken, ...result } = await authService.verifyMfaLogin(req.body, { expectedRole: 'STUDENT' })
+  setRefreshTokenCookie(res, refreshToken)
+  return ApiResponse.ok(res, result, 'Student login successful')
+}
+
+export const verifyAdminMfa = async (req, res) => {
+  const { refreshToken, ...result } = await authService.verifyMfaLogin(req.body, { expectedRole: 'ADMIN' })
+  setRefreshTokenCookie(res, refreshToken)
+  return ApiResponse.ok(res, result, 'Admin login successful')
+}
+
+export const refresh = async (req, res) => {
+  const token = req.cookies?.refreshToken
+
+  if (!token) {
+    throw new UnauthorizedError('No refresh token provided')
+  }
+
+  const { refreshToken, accessToken } = await authService.refreshSession(token)
+  setRefreshTokenCookie(res, refreshToken)
+
+  return ApiResponse.ok(res, { accessToken }, 'Token refreshed')
+}
+
+export const logout = async (req, res) => {
+  await authService.logoutUser(req.token, req.user.id)
+  clearRefreshTokenCookie(res)
+  return ApiResponse.noContent(res)
+}
+
+export const me = async (req, res) => ApiResponse.ok(res, req.user)
+
+export const changePassword = async (req, res) => {
+  await authService.changePassword(req.user.id, req.body)
+  clearRefreshTokenCookie(res)
+  return ApiResponse.ok(res, null, 'Password changed. Please login again.')
+}

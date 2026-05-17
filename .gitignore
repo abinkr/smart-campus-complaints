@@ -1,0 +1,17 @@
+.env
+.env.local
+.env.production
+node_modules
+dist
+build
+coverage
+.pytest_cache
+*.log
+logs
+__pycache__
+*.pyc
+.venv
+venv
+models/*.pkl
+.DS_Store
+Thumbs.db

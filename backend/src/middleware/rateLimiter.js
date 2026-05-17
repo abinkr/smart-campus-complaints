@@ -1,0 +1,44 @@
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
+import { RedisStore } from 'rate-limit-redis'
+import { redis } from '../config/redis.js'
+import { TooManyRequestsError } from '../utils/ApiError.js'
+
+const createLimiter = ({ windowMs, max, prefix }) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => `${prefix}:${ipKeyGenerator(req.ip)}`,
+    store: new RedisStore({
+      sendCommand: (...args) => redis.call(...args),
+      prefix: `rl:${prefix}:`,
+    }),
+    handler: (req, res, next) => {
+      next(new TooManyRequestsError('Too many requests. Please slow down.'))
+    },
+  })
+
+export const generalLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  prefix: 'general',
+})
+
+export const authLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  prefix: 'auth',
+})
+
+export const uploadLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  prefix: 'upload',
+})
+
+export const strictLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  prefix: 'strict',
+})

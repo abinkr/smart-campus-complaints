@@ -1,0 +1,37 @@
+{
+  "name": "smart-campus-complaints-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --mode student",
+    "dev:student": "vite --host 0.0.0.0 --port 5173 --mode student",
+    "dev:admin": "vite --host 0.0.0.0 --port 5174 --mode admin",
+    "build": "vite build --mode student",
+    "build:student": "vite build --mode student --outDir dist-student",
+    "build:admin": "vite build --mode admin --outDir dist-admin",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "latest",
+    "axios": "latest",
+    "dompurify": "^3.4.2",
+    "jwt-decode": "latest",
+    "lucide-react": "latest",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "latest",
+    "react-router-dom": "latest",
+    "react-toastify": "latest",
+    "recharts": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "latest",
+    "autoprefixer": "^10.4.20",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.17",
+    "vite": "latest"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "smart-campus-complaints-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon --experimental-vm-modules src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate": "prisma migrate dev",
+    "seed": "node prisma/seed.js",
+    "studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@sendgrid/mail": "^8.1.6",
+    "@sentry/node": "latest",
+    "@sentry/profiling-node": "latest",
+    "axios": "latest",
+    "bcryptjs": "latest",
+    "bullmq": "latest",
+    "cloudinary": "latest",
+    "compression": "latest",
+    "cookie-parser": "latest",
+    "cors": "latest",
+    "csv-stringify": "latest",
+    "dotenv": "latest",
+    "express": "4",
+    "express-async-errors": "latest",
+    "express-mongo-sanitize": "latest",
+    "express-rate-limit": "latest",
+    "helmet": "latest",
+    "hpp": "latest",
+    "ioredis": "latest",
+    "jsonwebtoken": "latest",
+    "ms": "latest",
+    "multer": "latest",
+    "nanoid": "latest",
+    "nodemailer": "latest",
+    "pino": "latest",
+    "pino-http": "latest",
+    "pino-pretty": "latest",
+    "rate-limit-redis": "latest",
+    "swagger-jsdoc": "latest",
+    "swagger-ui-express": "latest",
+    "twilio": "^6.0.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "latest",
+    "nodemon": "latest",
+    "prisma": "^5.22.0",
+    "supertest": "latest",
+    "vitest": "latest"
+  }
+}

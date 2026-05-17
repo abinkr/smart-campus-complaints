@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-admin
+dist-student
+npm-debug.log
+.env
+.env.local
+coverage

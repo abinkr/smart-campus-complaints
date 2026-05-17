@@ -1,0 +1,117 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      STUDENT_DOMAIN: ${STUDENT_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - student-frontend
+      - admin-frontend
+      - backend
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/campus_complaints?schema=public
+      REDIS_URL: redis://redis:6379
+      NLP_SERVICE_URL: http://nlp-service:5001
+      NLP_TIMEOUT_MS: 10000
+      CLIENT_URL: https://${STUDENT_DOMAIN}
+      STUDENT_CLIENT_URL: https://${STUDENT_DOMAIN}
+      ADMIN_CLIENT_URL: https://${ADMIN_DOMAIN}
+    expose:
+      - "5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nlp-service:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && node src/server.js"
+
+  student-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_PORTAL: student
+        VITE_API_URL: https://${API_DOMAIN}
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  admin-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_PORTAL: admin
+        VITE_API_URL: https://${API_DOMAIN}
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  nlp-service:
+    build: ./nlp-service
+    restart: unless-stopped
+    expose:
+      - "5001"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=5).read()\""]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 20s
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: campus_complaints
+    expose:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    expose:
+      - "6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:

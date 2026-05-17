@@ -1,0 +1,39 @@
+import multer from 'multer'
+import { BadRequestError } from '../utils/ApiError.js'
+
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      return cb(new BadRequestError('Only JPEG, PNG, and WebP images are allowed'))
+    }
+
+    cb(null, true)
+  },
+})
+
+export const uploadImage = (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (!err) {
+      return next()
+    }
+
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return next(new BadRequestError('Image must be 5MB or smaller'))
+      }
+
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return next(new BadRequestError('Only one image file is allowed'))
+      }
+    }
+
+    next(err)
+  })
+}

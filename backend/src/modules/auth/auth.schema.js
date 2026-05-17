@@ -1,0 +1,37 @@
+import { z } from 'zod'
+
+const strongPassword = z
+  .string()
+  .min(8)
+  .max(128)
+  .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character')
+
+const baseRegisterSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  email: z.string().trim().email().toLowerCase(),
+  password: strongPassword,
+})
+
+export const studentRegisterSchema = baseRegisterSchema
+
+export const adminRegisterSchema = baseRegisterSchema.extend({
+  adminRegistrationKey: z.string().trim().min(1),
+})
+
+export const loginSchema = z.object({
+  email: z.string().trim().email().toLowerCase(),
+  password: z.string().min(1),
+})
+
+export const verifyMfaSchema = z.object({
+  mfaToken: z.string().uuid(),
+  code: z.string().trim().regex(/^\d{6}$/, 'Verification code must be 6 digits'),
+})
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: strongPassword,
+})

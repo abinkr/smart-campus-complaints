@@ -1,0 +1,137 @@
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { bindAuthHandlers } from '../api/axiosInstance';
+import { loginUser, logoutUser, refreshUserSession, verifyMfaLogin } from '../api/authApi';
+import { PORTAL_ROLE } from '../portalConfig';
+
+export const AuthContext = createContext(null);
+
+function parseToken(accessToken, fallbackUser = null) {
+  if (!accessToken) return null;
+
+  try {
+    const decoded = jwtDecode(accessToken);
+    return {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role?.toLowerCase(),
+      exp: decoded.exp
+    };
+  } catch (error) {
+    return fallbackUser
+      ? {
+          id: fallbackUser.id,
+          email: fallbackUser.email,
+          role: fallbackUser.role?.toLowerCase(),
+          exp: undefined
+        }
+      : null;
+  }
+}
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const tokenRef = useRef(null);
+
+  useEffect(() => {
+    tokenRef.current = accessToken;
+  }, [accessToken]);
+
+  const clearSession = useCallback(() => {
+    setAccessToken(null);
+    setUser(null);
+  }, []);
+
+  const applySession = useCallback((nextToken, fallbackUser = null) => {
+    const parsedUser = parseToken(nextToken, fallbackUser);
+
+    if (parsedUser && parsedUser.role !== PORTAL_ROLE) {
+      setAccessToken(null);
+      setUser(null);
+      return;
+    }
+
+    setAccessToken(nextToken || null);
+    setUser(parsedUser);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const data = await refreshUserSession();
+    applySession(data.accessToken, data.user);
+    return data.accessToken;
+  }, [applySession]);
+
+  const logout = useCallback(
+    async ({ skipRequest = false } = {}) => {
+      try {
+        if (!skipRequest) {
+          await logoutUser();
+        }
+      } finally {
+        clearSession();
+      }
+    },
+    [clearSession]
+  );
+
+  const login = useCallback(
+    async (email, password) => {
+      return loginUser({ email, password }, PORTAL_ROLE);
+    },
+    []
+  );
+
+  const verifyMfa = useCallback(
+    async (mfaToken, code) => {
+      const data = await verifyMfaLogin({ mfaToken, code }, PORTAL_ROLE);
+      applySession(data.accessToken, data.user);
+      return data;
+    },
+    [applySession]
+  );
+
+  useEffect(() => {
+    bindAuthHandlers({
+      tokenGetter: () => tokenRef.current,
+      onRefresh: refresh,
+      onLogout: logout
+    });
+  }, [logout, refresh]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function restore() {
+      try {
+        await refresh();
+      } catch {
+        clearSession();
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    restore();
+    return () => {
+      active = false;
+    };
+  }, [clearSession, refresh]);
+
+  const value = useMemo(
+    () => ({
+      user,
+      accessToken,
+      login,
+      verifyMfa,
+      logout,
+      isLoading
+    }),
+    [accessToken, isLoading, login, logout, user, verifyMfa]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
