@@ -1,8 +1,17 @@
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
+!.env.*.example
+# Explicitly block portal-specific env files — never commit real credentials
+frontend/.env.admin
+frontend/.env.student
+backend/.env
+nlp-service/.env
 node_modules
 dist
+dist-*
 build
 coverage
 .pytest_cache
