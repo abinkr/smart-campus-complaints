@@ -19,4 +19,6 @@ EXPOSE 5000
 
 USER node
 
-CMD ["sh", "-c", "npm run prisma:deploy && exec node src/server.js"]
+# Leave the Render "Start Command" field BLANK so this CMD is used as-is.
+# npm run start:prod runs: prisma migrate deploy && node src/server.js
+CMD ["npm", "run", "start:prod"]
