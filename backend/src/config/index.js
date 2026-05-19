@@ -40,7 +40,7 @@ const envSchema = z.object({
   ADMIN_CLIENT_URL: optionalEnv(z.string().url()),
   SENTRY_DSN: z.string().url().optional().or(z.literal('')),
   RELOAD_SECRET: z.string().default('internal-secret'),
-  ADMIN_REGISTRATION_KEY: optionalEnv(z.string().min(16)),
+  ADMIN_REGISTRATION_KEY: optionalEnv(z.string().min(12)),
   TWILIO_ACCOUNT_SID: optionalEnv(z.string().startsWith('AC')),
   TWILIO_AUTH_TOKEN: optionalEnv(z.string().min(1)),
   TWILIO_VERIFY_SERVICE_SID: optionalEnv(z.string().startsWith('VA')),
@@ -56,4 +56,64 @@ if (!parsed.success) {
   process.exit(1)
 }
 
-export const config = parsed.data
+const configData = parsed.data
+
+const looksLikePlaceholder = (value = '') =>
+  /replace-with|your-|xxx|example\.com|internal-secret/i.test(String(value))
+
+const assertProductionConfig = (env) => {
+  if (env.NODE_ENV !== 'production') {
+    return
+  }
+
+  const errors = []
+  const requiredSecrets = [
+    'JWT_ACCESS_SECRET',
+    'JWT_REFRESH_SECRET',
+    'CLOUDINARY_API_SECRET',
+    'EMAIL_PASS',
+    'RELOAD_SECRET',
+  ]
+
+  for (const key of requiredSecrets) {
+    const value = env[key]
+
+    if (!value || looksLikePlaceholder(value)) {
+      errors.push(`${key} must be set to a real production secret`)
+    }
+  }
+
+  if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
+    errors.push('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different values')
+  }
+
+  if (env.RELOAD_SECRET.length < 32) {
+    errors.push('RELOAD_SECRET must be at least 32 characters in production')
+  }
+
+  for (const key of ['CLIENT_URL', 'STUDENT_CLIENT_URL', 'ADMIN_CLIENT_URL']) {
+    const value = env[key]
+
+    if (!value) {
+      continue
+    }
+
+    const url = new URL(value)
+
+    if (url.protocol !== 'https:' || /localhost|127\.0\.0\.1|example\.com/i.test(value)) {
+      errors.push(`${key} must be an exact deployed HTTPS frontend origin in production`)
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error('Unsafe production environment configuration:')
+    for (const error of errors) {
+      console.error(`- ${error}`)
+    }
+    process.exit(1)
+  }
+}
+
+assertProductionConfig(configData)
+
+export const config = configData

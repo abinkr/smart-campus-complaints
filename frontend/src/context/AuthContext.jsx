@@ -40,6 +40,7 @@ export function AuthProvider({ children }) {
   }, [accessToken]);
 
   const clearSession = useCallback(() => {
+    tokenRef.current = null;
     setAccessToken(null);
     setUser(null);
   }, []);
@@ -48,12 +49,15 @@ export function AuthProvider({ children }) {
     const parsedUser = parseToken(nextToken, fallbackUser);
 
     if (parsedUser && parsedUser.role !== PORTAL_ROLE) {
+      tokenRef.current = null;
       setAccessToken(null);
       setUser(null);
       return;
     }
 
-    setAccessToken(nextToken || null);
+    const normalizedToken = nextToken || null;
+    tokenRef.current = normalizedToken;
+    setAccessToken(normalizedToken);
     setUser(parsedUser);
   }, []);
 

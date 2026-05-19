@@ -13,12 +13,19 @@ const PRIORITY_MAP = {
   low: 'LOW',
 }
 
+const nlpRequestOptions = () => ({
+  timeout: config.NLP_TIMEOUT_MS,
+  headers: {
+    'X-NLP-Secret': config.RELOAD_SECRET,
+  },
+})
+
 export const callNlpService = async (text) => {
   try {
     const response = await axios.post(
       `${config.NLP_SERVICE_URL}/classify`,
       { text },
-      { timeout: config.NLP_TIMEOUT_MS }
+      nlpRequestOptions()
     )
 
     return {

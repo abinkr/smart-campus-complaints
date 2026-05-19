@@ -13,6 +13,13 @@ const PRIORITY_MAP = {
   low: 'LOW',
 }
 
+const nlpRequestOptions = () => ({
+  timeout: config.NLP_TIMEOUT_MS,
+  headers: {
+    'X-NLP-Secret': config.RELOAD_SECRET,
+  },
+})
+
 export const nlpWorker = new Worker(
   'nlp',
   async (job) => {
@@ -26,7 +33,7 @@ export const nlpWorker = new Worker(
       const response = await axios.post(
         `${config.NLP_SERVICE_URL}/classify`,
         { text },
-        { timeout: config.NLP_TIMEOUT_MS }
+        nlpRequestOptions()
       )
 
       category = response.data.category ?? 'Other'

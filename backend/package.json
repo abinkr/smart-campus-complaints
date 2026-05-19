@@ -7,9 +7,11 @@
   "scripts": {
     "dev": "nodemon --experimental-vm-modules src/server.js",
     "start": "node src/server.js",
+    "start:prod": "npm run prisma:deploy && node src/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "seed": "node prisma/seed.js",
     "studio": "prisma studio"
   },
@@ -19,8 +21,8 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@sendgrid/mail": "^8.1.6",
-    "@sentry/node": "latest",
-    "@sentry/profiling-node": "latest",
+    "@sentry/node": "^10.53.1",
+    "@sentry/profiling-node": "10.53.1",
     "axios": "latest",
     "bcryptjs": "latest",
     "bullmq": "latest",
@@ -45,6 +47,7 @@
     "pino": "latest",
     "pino-http": "latest",
     "pino-pretty": "latest",
+    "prisma": "^5.22.0",
     "rate-limit-redis": "latest",
     "swagger-jsdoc": "latest",
     "swagger-ui-express": "latest",
@@ -54,7 +57,6 @@
   "devDependencies": {
     "@testcontainers/postgresql": "latest",
     "nodemon": "latest",
-    "prisma": "^5.22.0",
     "supertest": "latest",
     "vitest": "latest"
   }

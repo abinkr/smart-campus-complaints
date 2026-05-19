@@ -1,13 +1,18 @@
+import hmac
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pydantic import BaseModel, field_validator, ValidationError
 
-from config import BATCH_LIMIT, CLIENT_URL, MAX_TEXT_LENGTH, RELOAD_SECRET
+from config import BATCH_LIMIT, CLIENT_URLS, MAX_TEXT_LENGTH, NLP_REQUIRE_SECRET, RELOAD_SECRET
 from src.logger import log_prediction
 from src.predictor import predictor
 
 app = Flask(__name__)
-CORS(app, origins=[CLIENT_URL])
+CORS(app, origins=CLIENT_URLS)
+
+
+PUBLIC_PATHS = {"/health"}
 
 
 def validation_errors(error: ValidationError) -> list[dict]:
@@ -29,6 +34,12 @@ class ClassifyRequest(BaseModel):
 
 @app.before_request
 def load_models_once():
+    if request.method != "OPTIONS" and request.path not in PUBLIC_PATHS and NLP_REQUIRE_SECRET:
+        provided_secret = request.headers.get("X-NLP-Secret") or request.headers.get("X-Reload-Secret")
+
+        if not provided_secret or not hmac.compare_digest(provided_secret, RELOAD_SECRET):
+            return jsonify({"error": "Unauthorized"}), 401
+
     if not predictor._loaded:
         predictor.load()
 

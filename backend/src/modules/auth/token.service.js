@@ -120,7 +120,7 @@ export const setRefreshTokenCookie = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
     secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: REFRESH_TOKEN_EXPIRY_MS,
     path: '/api/auth',
   })
@@ -130,7 +130,7 @@ export const clearRefreshTokenCookie = (res) => {
   res.clearCookie('refreshToken', {
     httpOnly: true,
     secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/api/auth',
   })
 }

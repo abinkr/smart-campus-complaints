@@ -2,7 +2,7 @@ import { config } from '../../config/index.js'
 import { prisma } from '../../config/prisma.js'
 import { UnauthorizedError } from '../../utils/ApiError.js'
 import { logger } from '../../utils/logger.js'
-import { sendSendGridOtp } from '../../services/email.service.js'
+import { sendOtpEmail } from '../../services/email.service.js'
 import { generateOtp, hashOtp, verifyOtp } from '../../utils/otp.util.js'
 
 const maskEmail = (email) => {
@@ -23,7 +23,7 @@ export const createMfaChallenge = async (user) => {
   const code = generateOtp()
   const otpHash = await hashOtp(code)
 
-  await sendSendGridOtp(user.email, code)
+  await sendOtpEmail(user.email, code)
 
   const otpRecord = await prisma.emailOtp.create({
     data: {

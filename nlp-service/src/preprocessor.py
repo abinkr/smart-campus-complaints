@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 nltk.download("stopwords", quiet=True)
 nltk.download("wordnet", quiet=True)
 nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
 
 STOP_WORDS = set(stopwords.words("english"))
 
@@ -37,6 +38,7 @@ def _tokenize(text: str) -> list[str]:
         return word_tokenize(text)
     except LookupError:
         nltk.download("punkt", quiet=True)
+        nltk.download("punkt_tab", quiet=True)
         try:
             return word_tokenize(text)
         except LookupError:

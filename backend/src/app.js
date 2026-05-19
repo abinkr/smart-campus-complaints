@@ -38,13 +38,23 @@ const getAllowedOrigins = () => {
   return origins
 }
 
+const rejectDisallowedBrowserOrigins = (allowedOrigins) => (req, res, next) => {
+  const origin = req.get('origin')
+
+  if (origin && !allowedOrigins.has(origin)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Origin is not allowed',
+      requestId: req.id,
+    })
+  }
+
+  return next()
+}
+
 export const createApp = () => {
   const app = express()
   const allowedOrigins = getAllowedOrigins()
-
-  if (typeof Sentry.setupExpressErrorHandler === 'function') {
-    Sentry.setupExpressErrorHandler(app)
-  }
 
   app.set('trust proxy', 1)
 
@@ -55,8 +65,12 @@ export const createApp = () => {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: config.NODE_ENV === 'production'
+            ? ["'self'"]
+            : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: config.NODE_ENV === 'production'
+            ? ["'self'"]
+            : ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:", "https:"],
           connectSrc: ["'self'", "https:"],
           fontSrc: ["'self'", "https:", "data:"],
@@ -79,6 +93,8 @@ export const createApp = () => {
       },
     })
   )
+
+  app.use(rejectDisallowedBrowserOrigins(allowedOrigins))
 
   app.use(
     cors({
@@ -135,6 +151,10 @@ export const createApp = () => {
   app.use('/api/complaints', complaintRoutes)
   app.use('/api/admin', adminRoutes)
   app.use('/api/analytics', analyticsRoutes)
+
+  if (typeof Sentry.setupExpressErrorHandler === 'function') {
+    Sentry.setupExpressErrorHandler(app)
+  }
 
   app.use(notFound)
   app.use(errorHandler)

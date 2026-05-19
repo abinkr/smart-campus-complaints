@@ -55,7 +55,9 @@ export const errorHandler = (err, req, res, next) => {
     'Unhandled error'
   )
 
-  Sentry.captureException(err)
+  if (!res.sentry) {
+    Sentry.captureException(err)
+  }
 
   return res.status(500).json({
     success: false,

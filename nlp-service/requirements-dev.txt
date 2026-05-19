@@ -1,0 +1,5 @@
+-r requirements.txt
+eli5==0.13.0
+nlpaug==1.1.11
+pytest==9.0.3
+pytest-cov==6.0.0
