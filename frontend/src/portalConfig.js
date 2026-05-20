@@ -1,4 +1,4 @@
-const rawPortal = import.meta.env.VITE_PORTAL || 'student';
+const rawPortal = import.meta.env.VITE_PORTAL || import.meta.env.MODE || 'student';
 
 export const PORTAL_ROLE = rawPortal.toLowerCase() === 'admin' ? 'admin' : 'student';
 export const PORTAL_ROLE_LABEL = PORTAL_ROLE === 'admin' ? 'Admin' : 'Student';
