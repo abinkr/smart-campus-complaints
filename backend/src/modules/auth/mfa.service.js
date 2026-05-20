@@ -2,6 +2,7 @@ import { config } from '../../config/index.js'
 import { prisma } from '../../config/prisma.js'
 import { UnauthorizedError } from '../../utils/ApiError.js'
 import { logger } from '../../utils/logger.js'
+import { sendEmailOtp, checkEmailOtp } from '../../config/twilioClient.js'
 import { sendOtpEmail } from '../../services/email.service.js'
 import { generateOtp, hashOtp, verifyOtp } from '../../utils/otp.util.js'
 
@@ -9,6 +10,10 @@ const maskEmail = (email) => {
   const [local, domain] = email.split('@')
   const visible = local.slice(0, 2)
   return `${visible}${'*'.repeat(Math.max(local.length - 2, 3))}@${domain}`
+}
+
+const isTwilioConfigured = () => {
+  return !!(config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_VERIFY_SERVICE_SID)
 }
 
 export const createMfaChallenge = async (user) => {
@@ -21,15 +26,26 @@ export const createMfaChallenge = async (user) => {
     },
   })
 
-  const code = generateOtp()
-  const codeHash = await hashOtp(code)
-
-  await sendOtpEmail(user.email, code)
+  let verificationSid
+  if (isTwilioConfigured()) {
+    try {
+      const verification = await sendEmailOtp(user.email)
+      verificationSid = verification.sid
+    } catch (err) {
+      logger.error({ userId: user.id, error: err.message }, 'Failed to initiate Twilio Verify MFA')
+      throw err
+    }
+  } else {
+    const code = generateOtp()
+    const codeHash = await hashOtp(code)
+    verificationSid = codeHash
+    await sendOtpEmail(user.email, code)
+  }
 
   const challenge = await prisma.mfaChallenge.create({
     data: {
       userId: user.id,
-      verificationSid: codeHash,
+      verificationSid,
       deliveryChannel: 'email',
       expiresAt,
     },
@@ -39,7 +55,7 @@ export const createMfaChallenge = async (user) => {
     },
   })
 
-  logger.info({ userId: user.id, mfaChallengeId: challenge.id }, 'Email OTP challenge issued')
+  logger.info({ userId: user.id, mfaChallengeId: challenge.id, usingTwilio: isTwilioConfigured() }, 'Email OTP challenge issued')
 
   return {
     mfaToken: challenge.id,
@@ -82,7 +98,13 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     throw new UnauthorizedError('Too many incorrect verification code attempts')
   }
 
-  const isValid = await verifyOtp(code, challenge.verificationSid)
+  let isValid = false
+
+  if (isTwilioConfigured() && !challenge.verificationSid.startsWith('$2b$')) {
+    isValid = await checkEmailOtp({ to: challenge.user.email, code })
+  } else {
+    isValid = await verifyOtp(code, challenge.verificationSid)
+  }
 
   if (!isValid) {
     await prisma.mfaChallenge.update({
