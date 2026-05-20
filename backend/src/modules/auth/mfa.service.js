@@ -2,8 +2,7 @@ import { config } from '../../config/index.js'
 import { prisma } from '../../config/prisma.js'
 import { UnauthorizedError } from '../../utils/ApiError.js'
 import { logger } from '../../utils/logger.js'
-import { sendOtpEmail } from '../../services/email.service.js'
-import { generateOtp, hashOtp, verifyOtp } from '../../utils/otp.util.js'
+import { sendEmailOtp, checkEmailOtp } from '../../config/twilioClient.js'
 
 const maskEmail = (email) => {
   const [local, domain] = email.split('@')
@@ -14,21 +13,20 @@ const maskEmail = (email) => {
 export const createMfaChallenge = async (user) => {
   const expiresAt = new Date(Date.now() + config.MFA_CODE_EXPIRY_MINUTES * 60 * 1000)
 
-  await prisma.emailOtp.deleteMany({
+  await prisma.mfaChallenge.deleteMany({
     where: {
       userId: user.id,
+      consumedAt: null,
     },
   })
 
-  const code = generateOtp()
-  const otpHash = await hashOtp(code)
+  const verification = await sendEmailOtp(user.email)
 
-  await sendOtpEmail(user.email, code)
-
-  const otpRecord = await prisma.emailOtp.create({
+  const challenge = await prisma.mfaChallenge.create({
     data: {
       userId: user.id,
-      otpHash,
+      verificationSid: verification.sid,
+      deliveryChannel: 'email',
       expiresAt,
     },
     select: {
@@ -37,11 +35,11 @@ export const createMfaChallenge = async (user) => {
     },
   })
 
-  logger.info({ userId: user.id, otpId: otpRecord.id }, 'Email OTP challenge issued')
+  logger.info({ userId: user.id, mfaChallengeId: challenge.id }, 'Email OTP challenge issued')
 
   return {
-    mfaToken: otpRecord.id,
-    expiresAt: otpRecord.expiresAt,
+    mfaToken: challenge.id,
+    expiresAt: challenge.expiresAt,
     delivery: {
       channel: 'email',
       destination: maskEmail(user.email),
@@ -50,7 +48,7 @@ export const createMfaChallenge = async (user) => {
 }
 
 export const verifyMfaChallenge = async ({ mfaToken, code }) => {
-  const otpRecord = await prisma.emailOtp.findUnique({
+  const challenge = await prisma.mfaChallenge.findUnique({
     where: {
       id: mfaToken,
     },
@@ -66,20 +64,23 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     },
   })
 
-  if (!otpRecord || otpRecord.expiresAt < new Date()) {
+  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date()) {
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 
-  if (otpRecord.attempts >= config.MFA_MAX_ATTEMPTS) {
+  if (challenge.attempts >= config.MFA_MAX_ATTEMPTS) {
     throw new UnauthorizedError('Too many incorrect verification code attempts')
   }
 
-  const isValid = await verifyOtp(code, otpRecord.otpHash)
+  const isValid = await checkEmailOtp({
+    to: challenge.user.email,
+    code,
+  })
 
   if (!isValid) {
-    await prisma.emailOtp.update({
+    await prisma.mfaChallenge.update({
       where: {
-        id: otpRecord.id,
+        id: challenge.id,
       },
       data: {
         attempts: {
@@ -91,20 +92,32 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 
-  await prisma.emailOtp.delete({
+  await prisma.mfaChallenge.update({
     where: {
-      id: otpRecord.id,
+      id: challenge.id,
+    },
+    data: {
+      consumedAt: new Date(),
     },
   })
 
-  return otpRecord.user
+  return challenge.user
 }
 
 export const deleteExpiredMfaChallenges = () =>
-  prisma.emailOtp.deleteMany({
+  prisma.mfaChallenge.deleteMany({
     where: {
-      expiresAt: {
-        lt: new Date(),
-      },
+      OR: [
+        {
+          expiresAt: {
+            lt: new Date(),
+          },
+        },
+        {
+          consumedAt: {
+            not: null,
+          },
+        },
+      ],
     },
   })
