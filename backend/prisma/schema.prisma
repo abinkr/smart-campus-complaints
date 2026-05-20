@@ -3,26 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String   @db.VarChar(100)
-  email      String   @unique(map: "users_email_unique") @db.VarChar(255)
-  password   String   @db.VarChar(255)
-  role       Role     @default(STUDENT)
-  department String?  @db.VarChar(100)
-  loginFailedAttempts Int @default(0) @map("login_failed_attempts")
-  lockedUntil DateTime? @map("locked_until") @db.Timestamptz(6)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  complaints    Complaint[]    @relation("UserComplaints")
-  logs          ComplaintLog[] @relation("AdminLogs")
-  refreshTokens RefreshToken[]
-  mfaChallenges MfaChallenge[]
-  emailOtps     EmailOtp[]
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String         @db.VarChar(100)
+  email               String         @unique(map: "users_email_unique") @db.VarChar(255)
+  password            String         @db.VarChar(255)
+  role                Role           @default(STUDENT)
+  department          String?        @db.VarChar(100)
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  loginFailedAttempts Int            @default(0) @map("login_failed_attempts")
+  lockedUntil         DateTime?      @map("locked_until") @db.Timestamptz(6)
+  logs                ComplaintLog[] @relation("AdminLogs")
+  complaints          Complaint[]    @relation("UserComplaints")
+  mfaChallenges       MfaChallenge[]
+  refreshTokens       RefreshToken[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -31,23 +30,22 @@ model User {
 }
 
 model Complaint {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String    @map("user_id") @db.Uuid
-  title         String    @db.VarChar(200)
-  description   String    @db.Text
-  imageUrl      String?   @map("image_url") @db.VarChar(500)
-  category      String?   @db.VarChar(50)
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String         @map("user_id") @db.Uuid
+  title         String         @db.VarChar(200)
+  description   String
+  imageUrl      String?        @map("image_url") @db.VarChar(500)
+  category      String?        @db.VarChar(50)
   priority      Priority?
-  nlpConfidence Decimal?  @map("nlp_confidence") @db.Decimal(5, 2)
-  status        Status    @default(OPEN)
-  department    String?   @db.VarChar(100)
-  adminNote     String?   @map("admin_note") @db.Text
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  resolvedAt    DateTime? @map("resolved_at") @db.Timestamptz(6)
-
-  user User           @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade, map: "complaints_user_fk")
-  logs ComplaintLog[]
+  nlpConfidence Decimal?       @map("nlp_confidence") @db.Decimal(5, 2)
+  status        Status         @default(OPEN)
+  department    String?        @db.VarChar(100)
+  adminNote     String?        @map("admin_note")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  resolvedAt    DateTime?      @map("resolved_at") @db.Timestamptz(6)
+  logs          ComplaintLog[]
+  user          User           @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade, map: "complaints_user_fk")
 
   @@index([userId], map: "idx_complaints_user_id")
   @@index([status], map: "idx_complaints_status")
@@ -60,16 +58,15 @@ model Complaint {
 }
 
 model ComplaintLog {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  complaintId String   @map("complaint_id") @db.Uuid
-  changedBy   String?  @map("changed_by") @db.Uuid
-  oldStatus   String?  @map("old_status") @db.VarChar(30)
-  newStatus   String?  @map("new_status") @db.VarChar(30)
-  note        String?  @db.Text
-  changedAt   DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
-
-  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "logs_complaint_fk")
-  admin     User?     @relation("AdminLogs", fields: [changedBy], references: [id], onDelete: SetNull, map: "logs_admin_fk")
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  complaintId String    @map("complaint_id") @db.Uuid
+  changedBy   String?   @map("changed_by") @db.Uuid
+  oldStatus   String?   @map("old_status") @db.VarChar(30)
+  newStatus   String?   @map("new_status") @db.VarChar(30)
+  note        String?
+  changedAt   DateTime  @default(now()) @map("changed_at") @db.Timestamptz(6)
+  admin       User?     @relation("AdminLogs", fields: [changedBy], references: [id], map: "logs_admin_fk")
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "logs_complaint_fk")
 
   @@index([complaintId], map: "idx_logs_complaint_id")
   @@index([changedBy], map: "idx_logs_changed_by")
@@ -83,8 +80,7 @@ model RefreshToken {
   userId    String   @map("user_id") @db.Uuid
   expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "refresh_tokens_user_fk")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "refresh_tokens_user_fk")
 
   @@index([tokenHash], map: "idx_refresh_tokens_token_hash")
   @@index([userId], map: "idx_refresh_tokens_user_id")
@@ -95,14 +91,13 @@ model RefreshToken {
 model MfaChallenge {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId          String    @map("user_id") @db.Uuid
-  verificationSid String    @map("verification_sid") @db.VarChar(64)
-  deliveryChannel String    @default("email") @map("delivery_channel") @db.VarChar(20)
   attempts        Int       @default(0)
   expiresAt       DateTime  @map("expires_at") @db.Timestamptz(6)
   consumedAt      DateTime? @map("consumed_at") @db.Timestamptz(6)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "mfa_challenges_user_fk")
+  verificationSid String    @map("verification_sid") @db.VarChar(64)
+  deliveryChannel String    @default("email") @map("delivery_channel") @db.VarChar(20)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "mfa_challenges_user_fk")
 
   @@index([userId], map: "idx_mfa_challenges_user_id")
   @@index([verificationSid], map: "idx_mfa_challenges_verification_sid")
@@ -139,19 +134,4 @@ enum Priority {
   LOW
 
   @@map("priority_enum")
-}
-
-model EmailOtp {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  otpHash   String   @map("otp_hash") @db.VarChar(255)
-  attempts  Int      @default(0)
-  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "email_otps_user_fk")
-
-  @@index([userId], map: "idx_email_otps_user_id")
-  @@index([expiresAt], map: "idx_email_otps_expires_at")
-  @@map("email_otps")
 }

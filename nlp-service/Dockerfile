@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+RUN python -m pip install --no-cache-dir --upgrade pip==26.1.1 wheel==0.46.2
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN python -c "import nltk; \
