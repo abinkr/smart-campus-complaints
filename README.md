@@ -91,7 +91,7 @@ NLP:
 
 - Frontend deploys to Vercel with `VITE_API_URL=https://your-backend.onrender.com`.
 - Backend Docker deploys to Render using `backend/Dockerfile`. Leave Render's Docker start command blank so the image runs `npm run prisma:deploy` before `node src/server.js`. If you override it in Render, use `sh -c "npm run prisma:deploy && exec node src/server.js"`.
-- For deployed frontend/backend on different domains, set `NODE_ENV=production` on the backend and set `CLIENT_URL`, `STUDENT_CLIENT_URL`, and `ADMIN_CLIENT_URL` to the exact HTTPS Vercel frontend origins so CORS allows credentialed refresh-token cookies.
+- For deployed frontend/backend on different domains, set `NODE_ENV=production` on the backend and set `CLIENT_URL=https://smart-campus-student.vercel.app`, `STUDENT_CLIENT_URL=https://smart-campus-student.vercel.app`, and `ADMIN_CLIENT_URL` to the exact HTTPS Vercel frontend origins so CORS allows credentialed refresh-token cookies.
 - Login OTP emails are sent with `SENDGRID_API_KEY` when configured, otherwise the backend falls back to SMTP using `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, and `EMAIL_FROM`. Twilio settings are present for future Verify integration, but the current login MFA flow does not use Twilio.
 - Set the same strong `RELOAD_SECRET` value on both backend and NLP services. Backend sends it as `X-NLP-Secret`; NLP rejects prediction, explain, metadata, and reload requests without it.
 - NLP service deploys as a separate Render web service on port `5001` with `ENVIRONMENT=production` and `NLP_REQUIRE_SECRET=true`.
