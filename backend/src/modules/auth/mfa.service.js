@@ -2,7 +2,8 @@ import { config } from '../../config/index.js'
 import { prisma } from '../../config/prisma.js'
 import { UnauthorizedError } from '../../utils/ApiError.js'
 import { logger } from '../../utils/logger.js'
-import { sendEmailOtp, checkEmailOtp } from '../../config/twilioClient.js'
+import { sendOtpEmail } from '../../services/email.service.js'
+import { generateOtp, hashOtp, verifyOtp } from '../../utils/otp.util.js'
 
 const maskEmail = (email) => {
   const [local, domain] = email.split('@')
@@ -20,12 +21,15 @@ export const createMfaChallenge = async (user) => {
     },
   })
 
-  const verification = await sendEmailOtp(user.email)
+  const code = generateOtp()
+  const codeHash = await hashOtp(code)
+
+  await sendOtpEmail(user.email, code)
 
   const challenge = await prisma.mfaChallenge.create({
     data: {
       userId: user.id,
-      verificationSid: verification.sid,
+      codeHash,
       deliveryChannel: 'email',
       expiresAt,
     },
@@ -52,7 +56,13 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     where: {
       id: mfaToken,
     },
-    include: {
+    select: {
+      id: true,
+      userId: true,
+      attempts: true,
+      expiresAt: true,
+      consumedAt: true,
+      codeHash: true,
       user: {
         select: {
           id: true,
@@ -64,7 +74,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     },
   })
 
-  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date()) {
+  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date() || !challenge.codeHash) {
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 
@@ -72,10 +82,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     throw new UnauthorizedError('Too many incorrect verification code attempts')
   }
 
-  const isValid = await checkEmailOtp({
-    to: challenge.user.email,
-    code,
-  })
+  const isValid = await verifyOtp(code, challenge.codeHash)
 
   if (!isValid) {
     await prisma.mfaChallenge.update({

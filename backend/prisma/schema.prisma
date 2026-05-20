@@ -95,7 +95,8 @@ model MfaChallenge {
   expiresAt       DateTime  @map("expires_at") @db.Timestamptz(6)
   consumedAt      DateTime? @map("consumed_at") @db.Timestamptz(6)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  verificationSid String    @map("verification_sid") @db.VarChar(64)
+  codeHash        String?   @map("code_hash") @db.VarChar(255)
+  verificationSid String?   @map("verification_sid") @db.VarChar(64)
   deliveryChannel String    @default("email") @map("delivery_channel") @db.VarChar(20)
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "mfa_challenges_user_fk")
 
