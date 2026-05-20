@@ -29,7 +29,7 @@ export const createMfaChallenge = async (user) => {
   const challenge = await prisma.mfaChallenge.create({
     data: {
       userId: user.id,
-      codeHash,
+      verificationSid: codeHash,
       deliveryChannel: 'email',
       expiresAt,
     },
@@ -62,7 +62,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
       attempts: true,
       expiresAt: true,
       consumedAt: true,
-      codeHash: true,
+      verificationSid: true,
       user: {
         select: {
           id: true,
@@ -74,7 +74,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     },
   })
 
-  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date() || !challenge.codeHash) {
+  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date() || !challenge.verificationSid) {
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 
@@ -82,7 +82,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     throw new UnauthorizedError('Too many incorrect verification code attempts')
   }
 
-  const isValid = await verifyOtp(code, challenge.codeHash)
+  const isValid = await verifyOtp(code, challenge.verificationSid)
 
   if (!isValid) {
     await prisma.mfaChallenge.update({
