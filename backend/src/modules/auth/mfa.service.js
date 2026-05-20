@@ -13,7 +13,10 @@ const maskEmail = (email) => {
 }
 
 const isTwilioConfigured = () => {
-  return !!(config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_VERIFY_SERVICE_SID)
+  return (
+    config.MFA_PROVIDER === 'twilio' &&
+    !!(config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_VERIFY_SERVICE_SID)
+  )
 }
 
 export const createMfaChallenge = async (user) => {
@@ -32,8 +35,14 @@ export const createMfaChallenge = async (user) => {
       const verification = await sendEmailOtp(user.email)
       verificationSid = verification.sid
     } catch (err) {
-      logger.error({ userId: user.id, error: err.message }, 'Failed to initiate Twilio Verify MFA')
-      throw err
+      logger.warn(
+        { userId: user.id, error: err.message },
+        'Failed to initiate Twilio Verify MFA. Falling back to local SMTP/SendGrid.'
+      )
+      const code = generateOtp()
+      const codeHash = await hashOtp(code)
+      verificationSid = codeHash
+      await sendOtpEmail(user.email, code)
     }
   } else {
     const code = generateOtp()
