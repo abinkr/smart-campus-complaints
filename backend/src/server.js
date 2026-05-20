@@ -9,11 +9,9 @@ import { nlpWorker } from './jobs/nlp.worker.js'
 import { cleanupWorker } from './jobs/cleanup.worker.js'
 import { closeQueues, scheduleCleanupJobs } from './queues/index.js'
 
-await scheduleCleanupJobs()
-
 const app = createApp()
 
-const server = app.listen(config.PORT, () => {
+const server = app.listen(config.PORT, '0.0.0.0', () => {
   logger.info(
     {
       port: config.PORT,
@@ -21,6 +19,10 @@ const server = app.listen(config.PORT, () => {
     },
     'Server started'
   )
+})
+
+scheduleCleanupJobs().catch((err) => {
+  logger.warn({ err }, 'Failed to schedule cleanup jobs')
 })
 
 const shutdown = async (signal) => {
