@@ -11,20 +11,25 @@ if (config.SENDGRID_API_KEY) {
   isSendGridConfigured = true
 }
 
+const normalizeEmailPassword = (value = '') =>
+  config.EMAIL_HOST === 'smtp.gmail.com' ? value.replace(/\s+/g, '') : value
+
+const emailPassword = normalizeEmailPassword(config.EMAIL_PASS)
+
 const smtpTransporter = nodemailer.createTransport({
   host: config.EMAIL_HOST,
   port: config.EMAIL_PORT,
   secure: config.EMAIL_PORT === 465,
   auth: {
     user: config.EMAIL_USER,
-    pass: config.EMAIL_PASS,
+    pass: emailPassword,
   },
 })
 
 const canSendSmtpEmail = () =>
   config.EMAIL_USER !== 'your@gmail.com' &&
-  config.EMAIL_PASS !== 'your-gmail-app-password' &&
-  config.EMAIL_PASS.length > 0
+  emailPassword !== 'your-gmail-app-password' &&
+  emailPassword.length > 0
 
 const createOtpMessage = (to, code) => ({
   to,
