@@ -1,9 +1,17 @@
 {
+  "framework": "vite",
+  "outputDirectory": "dist",
   "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 10 * * *"
     }
   ]
 }
