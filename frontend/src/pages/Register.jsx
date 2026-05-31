@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlus } from 'lucide-react';
+import { ArrowRight, KeyRound, Lock, Mail, UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -65,21 +65,30 @@ export default function Register() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="mx-auto max-w-md">
-        <section className="card">
-          <h1 className="text-2xl font-semibold text-gray-900">{PORTAL_ROLE_LABEL} Register</h1>
-          <p className="mt-1 text-sm text-gray-600">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-[440px]">
+        <section className="bg-surface-container-lowest rounded-2xl p-10 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-outline-variant text-center">
+          <h1 className="font-display-sm text-display-sm text-primary font-bold">{PORTAL_ROLE_LABEL} Register</h1>
+          <p className="mt-2 font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">
             Create a dedicated {PORTAL_ROLE} account for this portal.
           </p>
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <Input id="name" label="Name" error={errors.name?.message} {...register('name')} />
+          <form className="mt-8 space-y-5 text-left" onSubmit={handleSubmit(onSubmit)}>
+            <Input 
+              id="name" 
+              label="Name" 
+              icon={UserPlus}
+              placeholder="Full Name"
+              error={errors.name?.message} 
+              {...register('name')} 
+            />
             <Input
               id="email"
               label="Email"
               type="email"
               autoComplete="email"
+              icon={Mail}
+              placeholder="Email Address"
               error={errors.email?.message}
               {...register('email')}
             />
@@ -88,6 +97,8 @@ export default function Register() {
               label="Password"
               type="password"
               autoComplete="new-password"
+              icon={Lock}
+              placeholder="Strong Password"
               error={errors.password?.message}
               {...register('password')}
             />
@@ -97,20 +108,24 @@ export default function Register() {
                 label="Admin Registration Key"
                 type="password"
                 autoComplete="off"
+                icon={KeyRound}
+                placeholder="Secure Admin Key"
                 error={errors.adminRegistrationKey?.message}
                 {...register('adminRegistrationKey')}
               />
             )}
 
-            <Button type="submit" loading={isSubmitting} className="w-full">
-              <UserPlus size={16} />
-              Create {PORTAL_ROLE_LABEL} Account
-            </Button>
+            <div className="pt-2">
+              <Button type="submit" loading={isSubmitting} className="group w-full h-12 text-base font-semibold rounded-lg flex justify-center items-center gap-2">
+                Create {PORTAL_ROLE_LABEL} Account
+                {!isSubmitting && <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />}
+              </Button>
+            </div>
           </form>
 
-          <p className="mt-4 text-sm text-gray-600">
+          <p className="mt-8 font-body-sm text-body-sm text-on-surface-variant">
             Already have an account?{' '}
-            <Link to={PORTAL_LOGIN_PATH} className="font-medium text-blue-700 hover:text-blue-800">
+            <Link to={PORTAL_LOGIN_PATH} className="font-semibold text-primary hover:text-secondary transition-colors">
               Sign in
             </Link>
           </p>
