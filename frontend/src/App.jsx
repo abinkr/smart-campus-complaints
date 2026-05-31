@@ -1,88 +1,54 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './hooks/useAuth';
+import { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import ProtectedRoute from './components/layout/ProtectedRoute.jsx';
+import Spinner from './components/ui/Spinner.jsx';
+import { PORTAL_HOME_PATH, PORTAL_ROLE } from './portalConfig.js';
+import AdminLayout from './layouts/AdminLayout.jsx';
 
-// Layouts
-import MainLayout from './layouts/MainLayout';
-import AdminLayout from './layouts/AdminLayout';
-import PrivateRoute from './components/auth/PrivateRoute';
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Register = lazy(() => import('./pages/Register.jsx'));
 
-// Loading Component
-const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-  </div>
-);
+// Student Pages
+const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard.jsx'));
+const SubmitComplaint = lazy(() => import('./pages/student/SubmitComplaint.jsx'));
+const ComplaintHistory = lazy(() => import('./pages/student/ComplaintHistory.jsx'));
 
-// Lazy loaded pages
-const Home = lazy(() => import('./pages/Home'));
-const Login = lazy(() => import('./pages/auth/Login'));
-const Register = lazy(() => import('./pages/auth/Register'));
-const Dashboard = lazy(() => import('./pages/student/Dashboard'));
-const NewComplaint = lazy(() => import('./pages/student/NewComplaint'));
-const ComplaintDetails = lazy(() => import('./pages/student/ComplaintDetails'));
-const Settings = lazy(() => import('./pages/student/Settings'));
+// Admin Pages
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
+const ComplaintManagement = lazy(() => import('./pages/admin/ComplaintManagement.jsx'));
+const Analytics = lazy(() => import('./pages/admin/Analytics.jsx'));
+const AdminSettings = lazy(() => import('./pages/admin/Settings.jsx'));
 
-// Admin pages (New UI)
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const ComplaintManagement = lazy(() => import('./pages/admin/ComplaintManagement'));
-const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
-const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+export default function App() {
+  const isAdminPortal = PORTAL_ROLE === 'admin';
 
-function App() {
   return (
     <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              {/* Public Routes with Main Layout */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Home />} />
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
-              </Route>
+      <Suspense fallback={<Spinner fullPage />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {isAdminPortal ? (
+            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="complaints" element={<ComplaintManagement />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+          ) : (
+            <>
+              <Route path="/dashboard" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/submit" element={<ProtectedRoute role="student"><SubmitComplaint /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute role="student"><ComplaintHistory /></ProtectedRoute>} />
+            </>
+          )}
 
-              {/* Student Routes with Main Layout */}
-              <Route path="/student" element={
-                <PrivateRoute role="student">
-                  <MainLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="complaints/new" element={<NewComplaint />} />
-                <Route path="complaints/:id" element={<ComplaintDetails />} />
-                <Route path="settings" element={<Settings />} />
-              </Route>
-
-              {/* Admin Routes with Admin Layout */}
-              <Route path="/admin" element={
-                <PrivateRoute role="admin">
-                  <AdminLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="complaints" element={<ComplaintManagement />} />
-                
-                {/* 
-                  These two pages were not redesigned in this phase, 
-                  but we still mount them under the new AdminLayout.
-                */}
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="settings" element={<AdminSettings />} />
-              </Route>
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </AuthProvider>
-      </ThemeProvider>
+          <Route path="/" element={<Navigate to={PORTAL_HOME_PATH} replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
-
-export default App;
