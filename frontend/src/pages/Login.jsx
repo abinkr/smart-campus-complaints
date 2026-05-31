@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { PORTAL_HOME_PATH, PORTAL_ROLE, PORTAL_ROLE_LABEL } from '../portalConfig';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import OtpInput from '../components/ui/OtpInput';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address.'),
@@ -30,6 +31,7 @@ export default function Login() {
   const { user, login, verifyMfa } = useAuth();
   const [mfaChallenge, setMfaChallenge] = useState(null);
   const [pendingEmail, setPendingEmail] = useState('');
+  
   const {
     register,
     handleSubmit,
@@ -41,8 +43,9 @@ export default function Login() {
       password: ''
     }
   });
+
   const {
-    register: registerMfa,
+    control,
     handleSubmit: handleMfaSubmit,
     formState: { errors: mfaErrors, isSubmitting: isVerifying }
   } = useForm({
@@ -82,22 +85,24 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="mx-auto max-w-md">
-        <section className="card">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-[440px]">
+        <section className="bg-surface-container-lowest rounded-2xl p-10 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-outline-variant text-center">
           {!mfaChallenge ? (
             <>
-              <h1 className="text-2xl font-semibold text-gray-900">{PORTAL_ROLE_LABEL} Login</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Sign in through the dedicated {PORTAL_ROLE} portal.
+              <h1 className="font-display-sm text-display-sm text-primary font-bold">{PORTAL_ROLE_LABEL} Login</h1>
+              <p className="mt-2 font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">
+                Sign in through the dedicated {PORTAL_ROLE} portal for access.
               </p>
 
-              <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+              <form className="mt-8 space-y-5 text-left" onSubmit={handleSubmit(onSubmit)}>
                 <Input
                   id="email"
                   label="Email"
                   type="email"
                   autoComplete="email"
+                  placeholder="Email"
+                  icon={Mail}
                   error={errors.email?.message}
                   {...register('email')}
                 />
@@ -106,46 +111,55 @@ export default function Login() {
                   label="Password"
                   type="password"
                   autoComplete="current-password"
+                  placeholder="Password"
+                  icon={Lock}
                   error={errors.password?.message}
                   {...register('password')}
                 />
-                <Button type="submit" loading={isSubmitting} className="w-full">
-                  <LogIn size={16} />
-                  Continue
-                </Button>
+                
+                <div className="pt-2">
+                  <Button type="submit" loading={isSubmitting} className="w-full h-12 text-base font-semibold rounded-lg flex justify-center items-center gap-2">
+                    Continue
+                    {!isSubmitting && <ArrowRight size={18} />}
+                  </Button>
+                </div>
               </form>
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-semibold text-gray-900">Verify {PORTAL_ROLE_LABEL} Login</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="font-display-sm text-display-sm text-primary font-bold">Verify Your Identity</h1>
+              <p className="mt-2 font-body-md text-body-md text-on-surface-variant max-w-[300px] mx-auto">
                 Enter the 6-digit code sent to {mfaChallenge.delivery?.destination || pendingEmail}.
               </p>
 
-              <form className="mt-6 space-y-4" onSubmit={handleMfaSubmit(onVerifyMfa)}>
-                <Input
-                  id="code"
-                  label="Verification Code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  error={mfaErrors.code?.message}
-                  {...registerMfa('code')}
+              <form className="mt-8 space-y-6" onSubmit={handleMfaSubmit(onVerifyMfa)}>
+                <Controller
+                  name="code"
+                  control={control}
+                  render={({ field }) => (
+                    <OtpInput
+                      id="code"
+                      error={mfaErrors.code?.message}
+                      {...field}
+                    />
+                  )}
                 />
-                <Button type="submit" loading={isVerifying} className="w-full">
-                  <ShieldCheck size={16} />
-                  Verify & Sign In
-                </Button>
-                <Button type="button" variant="secondary" className="w-full" onClick={() => setMfaChallenge(null)}>
-                  Use a different account
-                </Button>
+                
+                <div className="space-y-3 pt-2">
+                  <Button type="submit" loading={isVerifying} className="w-full h-12 text-base font-semibold rounded-full flex justify-center items-center">
+                    Verify & Sign In
+                  </Button>
+                  <Button type="button" variant="secondary" className="w-full h-12 text-base font-semibold rounded-full border-outline text-primary hover:bg-surface-container-low" onClick={() => setMfaChallenge(null)}>
+                    Use a different account
+                  </Button>
+                </div>
               </form>
             </>
           )}
 
-          <p className="mt-4 text-sm text-gray-600">
+          <p className="mt-8 font-body-sm text-body-sm text-on-surface-variant">
             Need a {PORTAL_ROLE} account?{' '}
-            <Link to="/register" className="font-medium text-blue-700 hover:text-blue-800">
+            <Link to="/register" className="font-semibold text-primary hover:text-secondary transition-colors">
               Register
             </Link>
           </p>
