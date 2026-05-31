@@ -30,28 +30,35 @@ function parseToken(accessToken, fallbackUser = null) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedToken = localStorage.getItem('smart_campus_access_token');
+    return savedToken ? parseToken(savedToken) : null;
+  });
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('smart_campus_access_token') || null);
   const [isLoading, setIsLoading] = useState(true);
-  const tokenRef = useRef(null);
+  const tokenRef = useRef(accessToken);
 
   useEffect(() => {
     tokenRef.current = accessToken;
+    if (accessToken) {
+      localStorage.setItem('smart_campus_access_token', accessToken);
+    } else {
+      localStorage.removeItem('smart_campus_access_token');
+    }
   }, [accessToken]);
 
   const clearSession = useCallback(() => {
     tokenRef.current = null;
     setAccessToken(null);
     setUser(null);
+    localStorage.removeItem('smart_campus_access_token');
   }, []);
 
   const applySession = useCallback((nextToken, fallbackUser = null) => {
     const parsedUser = parseToken(nextToken, fallbackUser);
 
     if (parsedUser && parsedUser.role !== PORTAL_ROLE) {
-      tokenRef.current = null;
-      setAccessToken(null);
-      setUser(null);
+      clearSession();
       return;
     }
 
@@ -59,7 +66,11 @@ export function AuthProvider({ children }) {
     tokenRef.current = normalizedToken;
     setAccessToken(normalizedToken);
     setUser(parsedUser);
-  }, []);
+    
+    if (normalizedToken) {
+      localStorage.setItem('smart_campus_access_token', normalizedToken);
+    }
+  }, [clearSession]);
 
   const refresh = useCallback(async () => {
     const data = await refreshUserSession();
