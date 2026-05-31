@@ -31,7 +31,7 @@ const Input = forwardRef(function Input(
           id={id}
           ref={ref}
           className={`input-base ${as === 'textarea' ? 'min-h-[112px]' : ''} ${
-            Icon ? 'pl-10' : ''
+            Icon ? '!pl-10' : ''
           } ${className}`}
           {...props}
         />

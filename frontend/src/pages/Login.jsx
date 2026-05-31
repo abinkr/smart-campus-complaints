@@ -118,9 +118,9 @@ export default function Login() {
                 />
                 
                 <div className="pt-2">
-                  <Button type="submit" loading={isSubmitting} className="w-full h-12 text-base font-semibold rounded-lg flex justify-center items-center gap-2">
+                  <Button type="submit" loading={isSubmitting} className="group w-full h-12 text-base font-semibold rounded-lg flex justify-center items-center gap-2">
                     Continue
-                    {!isSubmitting && <ArrowRight size={18} />}
+                    {!isSubmitting && <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />}
                   </Button>
                 </div>
               </form>
