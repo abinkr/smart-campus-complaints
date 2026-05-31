@@ -65,7 +65,9 @@ axiosInstance.interceptors.response.use(
     if (
       originalRequest.skipAuthRefresh ||
       originalRequest._retry ||
-      originalRequest.url?.includes('/api/auth/refresh')
+      originalRequest.url?.includes('/api/auth/refresh') ||
+      originalRequest.url?.includes('/login') ||
+      originalRequest.url?.includes('/register')
     ) {
       return Promise.reject(error);
     }

@@ -99,11 +99,28 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
     },
   })
 
-  if (!challenge || challenge.consumedAt || challenge.expiresAt < new Date() || !challenge.verificationSid) {
+  if (!challenge) {
+    logger.warn({ mfaToken }, 'MFA verification failed: challenge not found')
+    throw new UnauthorizedError('Verification code is invalid or expired')
+  }
+
+  if (challenge.consumedAt) {
+    logger.warn({ mfaToken }, 'MFA verification failed: challenge already consumed')
+    throw new UnauthorizedError('Verification code is invalid or expired')
+  }
+
+  if (challenge.expiresAt < new Date()) {
+    logger.warn({ mfaToken, expiresAt: challenge.expiresAt }, 'MFA verification failed: challenge expired')
+    throw new UnauthorizedError('Verification code is invalid or expired')
+  }
+
+  if (!challenge.verificationSid) {
+    logger.warn({ mfaToken }, 'MFA verification failed: verificationSid missing')
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 
   if (challenge.attempts >= config.MFA_MAX_ATTEMPTS) {
+    logger.warn({ mfaToken, attempts: challenge.attempts }, 'MFA verification failed: maximum attempts reached')
     throw new UnauthorizedError('Too many incorrect verification code attempts')
   }
 
@@ -127,6 +144,7 @@ export const verifyMfaChallenge = async ({ mfaToken, code }) => {
       },
     })
 
+    logger.warn({ mfaToken, email: challenge.user.email }, 'MFA verification failed: incorrect code entered')
     throw new UnauthorizedError('Verification code is invalid or expired')
   }
 

@@ -23,19 +23,25 @@ function normalizeAuthPayload(payload) {
 
 export async function registerUser(payload, role) {
   const segment = roleToApiSegment(role);
-  const { data } = await axiosInstance.post(`/api/auth/${segment}/register`, payload);
+  const { data } = await axiosInstance.post(`/api/auth/${segment}/register`, payload, {
+    skipAuthRefresh: true
+  });
   return normalizeUser(unwrapEnvelope(data));
 }
 
 export async function loginUser(payload, role) {
   const segment = roleToApiSegment(role);
-  const { data } = await axiosInstance.post(`/api/auth/${segment}/login`, payload);
+  const { data } = await axiosInstance.post(`/api/auth/${segment}/login`, payload, {
+    skipAuthRefresh: true
+  });
   return unwrapEnvelope(data);
 }
 
 export async function verifyMfaLogin(payload, role) {
   const segment = roleToApiSegment(role);
-  const { data } = await axiosInstance.post(`/api/auth/${segment}/login/verify-mfa`, payload);
+  const { data } = await axiosInstance.post(`/api/auth/${segment}/login/verify-mfa`, payload, {
+    skipAuthRefresh: true
+  });
   return normalizeAuthPayload(unwrapEnvelope(data));
 }
 

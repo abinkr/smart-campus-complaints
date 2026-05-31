@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, Lock, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -32,6 +32,9 @@ export default function Login() {
   const [mfaChallenge, setMfaChallenge] = useState(null);
   const [pendingEmail, setPendingEmail] = useState('');
   
+  const loginSubmitBusy = useRef(false);
+  const mfaSubmitBusy = useRef(false);
+
   const {
     register,
     handleSubmit,
@@ -60,6 +63,8 @@ export default function Login() {
   }
 
   async function onSubmit(values) {
+    if (loginSubmitBusy.current) return;
+    loginSubmitBusy.current = true;
     try {
       const data = await login(values.email, values.password);
       setPendingEmail(values.email);
@@ -72,15 +77,21 @@ export default function Login() {
       } else {
         toast.error(message);
       }
+    } finally {
+      loginSubmitBusy.current = false;
     }
   }
 
   async function onVerifyMfa(values) {
+    if (mfaSubmitBusy.current) return;
+    mfaSubmitBusy.current = true;
     try {
       await verifyMfa(mfaChallenge.mfaToken, values.code);
       navigate(PORTAL_HOME_PATH, { replace: true });
     } catch (error) {
       toast.error(parseApiError(error));
+    } finally {
+      mfaSubmitBusy.current = false;
     }
   }
 
