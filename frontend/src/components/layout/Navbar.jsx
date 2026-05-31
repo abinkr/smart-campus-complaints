@@ -49,7 +49,7 @@ export default function Navbar() {
 
         {/* Trailing Icons */}
         <div className="flex items-center space-x-4 text-on-surface-variant">
-          <button className="hover:text-secondary transition-colors duration-200 ease-in-out flex items-center justify-center p-1.5 rounded-full hover:bg-surface-container-low">
+          <button aria-label="Notifications" className="hover:text-secondary transition-colors duration-200 ease-in-out flex items-center justify-center p-1.5 rounded-full hover:bg-surface-container-low">
             <span className="material-symbols-outlined">notifications</span>
           </button>
           <div className="flex items-center gap-4 pl-2 ml-2 border-l border-outline-variant">

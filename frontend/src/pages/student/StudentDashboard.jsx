@@ -3,12 +3,14 @@ import Navbar from '../../components/layout/Navbar';
 import ComplaintList from '../../components/complaint/ComplaintList';
 import Spinner from '../../components/ui/Spinner';
 import { useMyComplaints } from '../../hooks/useComplaints';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const recentQuery = useMyComplaints({ page: 1, limit: 6 });
   const resolvedQuery = useMyComplaints({ status: 'resolved', page: 1, limit: 1 });
-  const pendingQuery = useMyComplaints({ status: 'pending', page: 1, limit: 1 });
+  const pendingQuery = useMyComplaints({ status: 'open', page: 1, limit: 1 });
 
   if (recentQuery.isLoading || resolvedQuery.isLoading || pendingQuery.isLoading) {
     return <Spinner fullPage />;
@@ -18,6 +20,9 @@ export default function StudentDashboard() {
   const total = recentQuery.data?.pagination?.total || complaints.length;
   const resolved = resolvedQuery.data?.pagination?.total || 0;
   const pending = pendingQuery.data?.pagination?.total || 0;
+
+  // Display name: use name if available, fall back to email prefix
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Student';
 
   return (
     <div className="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col">
@@ -31,7 +36,7 @@ export default function StudentDashboard() {
               Student Portal
             </p>
             <h1 className="font-display-lg text-display-lg text-primary leading-tight">
-              Welcome back, Student
+              Welcome back, {displayName}
             </h1>
           </div>
           <button

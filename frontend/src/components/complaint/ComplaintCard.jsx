@@ -18,34 +18,35 @@ export default function ComplaintCard({ complaint, onClick }) {
     setModalOpen(true);
   }
 
-  // Map status to badges
+  // Map status to badges — status arrives lowercased from normalizeComplaint
   const statusConfig = {
-    OPEN: {
+    open: {
       label: 'Pending',
       bgClass: 'bg-error-container text-on-error-container',
       icon: 'hourglass_empty'
     },
-    IN_PROGRESS: {
+    in_progress: {
       label: 'In Review',
       bgClass: 'bg-primary-fixed text-on-primary-fixed-variant',
       icon: 'visibility'
     },
-    RESOLVED: {
+    resolved: {
       label: 'Resolved',
       bgClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
       icon: 'check_circle'
     }
-  }[complaint.status.toUpperCase()] || {
-    label: complaint.status,
+  }[complaint.status?.toLowerCase()] || {
+    label: complaint.status || 'Unknown',
     bgClass: 'bg-surface-container-high text-on-surface-variant',
     icon: 'info'
   };
 
+  // priority arrives lowercased from normalizeComplaint
   const priorityConfig = {
-    HIGH: { label: 'High Priority', icon: 'priority_high' },
-    MEDIUM: { label: 'Medium Priority', icon: 'remove' },
-    LOW: { label: 'Low Priority', icon: 'low_priority' }
-  }[complaint.priority?.toUpperCase()] || null;
+    high: { label: 'High Priority', icon: 'priority_high' },
+    medium: { label: 'Medium Priority', icon: 'remove' },
+    low: { label: 'Low Priority', icon: 'low_priority' }
+  }[complaint.priority?.toLowerCase()] || null;
 
   return (
     <>
