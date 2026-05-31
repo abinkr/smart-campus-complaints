@@ -16,7 +16,8 @@ import {
   categoryData,
   monthlyTrendData,
   statusData,
-  summaryAnalytics
+  summaryAnalytics,
+  departmentPerformanceData
 } from './mockAnalytics.js';
 import { mockComplaintLogs } from './mockComplaintLogs.js';
 
@@ -135,6 +136,19 @@ export function fetchMockAnalytics() {
         statusData: [...statusData],
         monthlyTrendData: [...monthlyTrendData]
       });
+    }, 500);
+  });
+}
+
+/**
+ * Fetch department performance analytics data.
+ *
+ * @returns {Promise<Array>}
+ */
+export function fetchDepartmentAnalytics() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...departmentPerformanceData]);
     }, 500);
   });
 }

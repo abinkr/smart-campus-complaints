@@ -35,3 +35,13 @@ export const monthlyTrendData = [
   { month: 'Apr', count: 14 },
   { month: 'May', count: 20 }
 ];
+
+// Data for Table — Department Performance Metrics
+export const departmentPerformanceData = [
+  { department: 'Maintenance', totalComplaints: 28, resolved: 22, avgResolutionDays: 2.1 },
+  { department: 'IT Support', totalComplaints: 45, resolved: 41, avgResolutionDays: 1.5 },
+  { department: 'Electrical', totalComplaints: 18, resolved: 14, avgResolutionDays: 3.2 },
+  { department: 'Plumbing', totalComplaints: 25, resolved: 20, avgResolutionDays: 2.8 },
+  { department: 'Cleaning', totalComplaints: 30, resolved: 28, avgResolutionDays: 0.8 },
+  { department: 'Administration', totalComplaints: 12, resolved: 10, avgResolutionDays: 4.5 }
+];
