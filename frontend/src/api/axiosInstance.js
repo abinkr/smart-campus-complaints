@@ -75,6 +75,7 @@ axiosInstance.interceptors.response.use(
     }
 
     if (isRefreshing) {
+      originalRequest._retry = true;
       return new Promise((resolve, reject) => {
         pendingQueue.push({ resolve, reject });
       }).then((token) => {

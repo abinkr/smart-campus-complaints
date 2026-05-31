@@ -1,10 +1,14 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
 import { RedisStore } from 'rate-limit-redis'
 import { redis } from '../config/redis.js'
+import { config } from '../config/index.js'
 import { TooManyRequestsError } from '../utils/ApiError.js'
 
-const createLimiter = ({ windowMs, max, prefix }) =>
-  rateLimit({
+const createLimiter = ({ windowMs, max, prefix }) => {
+  if (config.NODE_ENV === 'development' || config.NODE_ENV === 'test') {
+    return (req, res, next) => next()
+  }
+  return rateLimit({
     windowMs,
     max,
     standardHeaders: true,
@@ -18,6 +22,7 @@ const createLimiter = ({ windowMs, max, prefix }) =>
       next(new TooManyRequestsError('Too many requests. Please slow down.'))
     },
   })
+}
 
 export const generalLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
