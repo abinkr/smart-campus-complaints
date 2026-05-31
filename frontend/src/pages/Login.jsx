@@ -132,7 +132,7 @@ export default function Login() {
                 Enter the 6-digit code sent to {mfaChallenge.delivery?.destination || pendingEmail}.
               </p>
 
-              <form className="mt-8 space-y-6" onSubmit={handleMfaSubmit(onVerifyMfa)}>
+              <form className="mt-8 space-y-6 text-left" onSubmit={handleMfaSubmit(onVerifyMfa)}>
                 <Controller
                   name="code"
                   control={control}

@@ -76,9 +76,9 @@ const OtpInput = forwardRef(function OtpInput(
   };
 
   return (
-    <div className="space-y-1.5 flex flex-col items-center">
+    <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 w-full">
+        <label htmlFor={id} className="label-base">
           {label}
         </label>
       )}
