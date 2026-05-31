@@ -23,9 +23,16 @@ import adminRoutes from './modules/admin/admin.routes.js'
 import analyticsRoutes from './modules/analytics/analytics.routes.js'
 
 const getAllowedOrigins = () => {
-  const origins = new Set(
-    [config.CLIENT_URL, config.STUDENT_CLIENT_URL, config.ADMIN_CLIENT_URL].filter(Boolean)
-  )
+  const rawOrigins = [config.CLIENT_URL, config.STUDENT_CLIENT_URL, config.ADMIN_CLIENT_URL].filter(Boolean)
+  const origins = new Set()
+  
+  for (const raw of rawOrigins) {
+    try {
+      origins.add(new URL(raw).origin) // Safely strips trailing slashes
+    } catch {
+      // Ignore invalid URLs
+    }
+  }
 
   if (config.NODE_ENV !== 'production') {
     for (const origin of [...origins]) {
