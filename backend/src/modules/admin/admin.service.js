@@ -39,7 +39,7 @@ export const updateComplaint = async (id, adminId, dto) => {
     note: dto.adminNote ?? null,
   })
 
-  await Promise.allSettled([
+  Promise.allSettled([
     emailQueue.add(
       'statusUpdate',
       {

@@ -119,12 +119,20 @@ export function AuthProvider({ children }) {
     let active = true;
 
     async function restore() {
+      const savedToken = localStorage.getItem('smart_campus_access_token');
+      const parsed = parseToken(savedToken);
+
+      if (parsed && parsed.exp && Date.now() < (parsed.exp * 1000 - 10000)) {
+        if (active) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         await refresh();
-      } catch {
-        if (!tokenRef.current) {
-          clearSession();
-        }
+      } catch (err) {
+        clearSession();
       } finally {
         if (active) {
           setIsLoading(false);

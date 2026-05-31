@@ -68,7 +68,7 @@ export const submitComplaint = async (userId, body, file) => {
     note: 'Complaint submitted',
   })
 
-  await nlpQueue.add(
+  nlpQueue.add(
     'classify',
     {
       complaintId: complaint.id,
@@ -83,7 +83,7 @@ export const submitComplaint = async (userId, body, file) => {
     }
   )
 
-  await Promise.allSettled([
+  Promise.allSettled([
     invalidateCachePattern(`complaints:user:${userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
     invalidateCachePattern('analytics:*'),
