@@ -3,17 +3,21 @@ import Navbar from '../../components/layout/Navbar';
 
 export default function SubmitComplaint() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col antialiased">
       <Navbar />
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Submit Complaint</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Share complete details so the right department can act quickly.
-        </p>
-        <div className="mt-6">
-          <ComplaintForm />
+      <main className="flex-grow w-full px-gutter py-section-gap max-w-container-max mx-auto">
+        {/* Header Area */}
+        <div className="mb-8 max-w-[800px] mx-auto text-center md:text-left">
+          <h1 className="font-display-lg text-display-lg text-primary mb-2">Lodge a New Complaint</h1>
+          <p className="font-body-lg text-body-lg text-on-surface-variant">
+            Please provide detailed information below to help us process your request efficiently.
+            Fields marked with an asterisk are required.
+          </p>
         </div>
+        {/* Form Card */}
+        <ComplaintForm />
       </main>
     </div>
   );
 }
+

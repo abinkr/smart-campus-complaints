@@ -1,18 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import DOMPurify from 'dompurify';
-import { ImagePlus, Send } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useSubmitComplaint } from '../../hooks/useComplaints';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
 
 const complaintSchema = z.object({
-  title: z.string().min(5).max(200),
-  description: z.string().min(20).max(2000),
+  title: z.string().trim().min(3, 'Title must be at least 3 characters').max(200, 'Title cannot exceed 200 characters'),
+  description: z.string().trim().min(10, 'Description must be at least 10 characters').max(5000, 'Description cannot exceed 5000 characters'),
   image: z.instanceof(FileList).optional()
 });
 
@@ -104,75 +101,124 @@ export default function ComplaintForm() {
   }
 
   return (
-    <form className="card space-y-4" onSubmit={handleSubmit(onSubmit)}>
-      <Input
-        id="title"
-        label="Title"
-        placeholder="Water leak near Block A"
-        error={errors.title?.message}
-        {...register('title')}
-      />
-      <Input
-        id="description"
-        as="textarea"
-        label="Description"
-        placeholder="Describe the issue in detail, including location and urgency."
-        error={errors.description?.message}
-        {...register('description')}
-      />
+    <div className="max-w-[800px] mx-auto bg-surface-container-lowest border border-outline-variant rounded-xl p-6 md:p-10 shadow-sm relative overflow-hidden">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 relative z-10">
+        {/* Section 1: Basic Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="label-base" htmlFor="title">Complaint Title *</label>
+            <input
+              type="text"
+              id="title"
+              placeholder="Brief summary of the issue"
+              className={`input-base ${errors.title ? 'border-red-500' : ''}`}
+              {...register('title')}
+            />
+            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
+          </div>
 
-      <div className="space-y-1.5">
-        <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-          Proof Image
-        </label>
-        <div
-          className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            const file = event.dataTransfer.files?.[0];
-            assignFile(file);
-          }}
-        >
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          <div>
+            <label className="label-base" htmlFor="category">Category (Auto-classified)</label>
+            <select id="category" className="select-base opacity-75 cursor-not-allowed" disabled>
+              <option>Will be automatically detected by AI</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="label-base" htmlFor="priority">Priority Level (Auto-classified)</label>
+            <select id="priority" className="select-base opacity-75 cursor-not-allowed" disabled>
+              <option>Will be automatically detected by AI</option>
+            </select>
+          </div>
+        </div>
+
+        <hr className="border-t border-outline-variant border-opacity-50" />
+
+        {/* Section 2: Details */}
+        <div>
+          <label className="label-base" htmlFor="description">Detailed Description *</label>
+          <textarea
+            id="description"
+            rows="5"
+            placeholder="Describe the issue, steps taken, and any relevant context..."
+            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface p-4 focus:outline-none focus:border-primary-container focus:ring-0 transition-all duration-200 resize-y min-h-[160px] shadow-sm hover:border-outline ${
+              errors.description ? 'border-red-500' : ''
+            }`}
+            {...register('description')}
+          ></textarea>
+          {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
+        </div>
+
+        {/* Section 3: Attachments */}
+        <div>
+          <span className="label-base mb-2">Supporting Evidence (Optional)</span>
+          <div
             onClick={() => fileInputRef.current?.click()}
-          >
-            <ImagePlus size={16} />
-            Choose Image
-          </button>
-          <p className="mt-2 text-xs text-gray-500">Drag and drop is supported. Max 5MB.</p>
-          <input
-            id="image"
-            ref={(element) => {
-              fileInputRef.current = element;
-              imageField.ref(element);
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const file = event.dataTransfer.files?.[0];
+              assignFile(file);
             }}
-            name={imageField.name}
-            onBlur={imageField.onBlur}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={(event) => assignFile(event.target.files?.[0])}
-          />
+            className="w-full border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-low hover:bg-surface transition-colors duration-200 cursor-pointer p-8 flex flex-col items-center justify-center text-center group"
+          >
+            <div className="h-12 w-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-primary-container" style={{ fontSize: '24px' }}>
+                cloud_upload
+              </span>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface mb-1">
+              <span className="font-bold">Click to upload</span> or drag and drop
+            </p>
+            <p className="font-label-md text-label-md text-on-surface-variant">
+              PNG, JPG, or WebP (max. 5MB)
+            </p>
+            <input
+              id="image"
+              ref={(element) => {
+                fileInputRef.current = element;
+                imageField.ref(element);
+              }}
+              name={imageField.name}
+              onBlur={imageField.onBlur}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(event) => assignFile(event.target.files?.[0])}
+            />
+          </div>
+
           {imageFile && (
             <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-white p-2">
               <img
                 src={previewUrl}
-                alt={`Preview of selected image for complaint titled ${watch('title') || 'new complaint'}`}
+                alt="Selected preview"
                 className="max-h-48 w-full rounded object-cover"
               />
             </div>
           )}
+          {errors.image && <p className="text-xs text-red-500 mt-1">{errors.image.message}</p>}
         </div>
-        {errors.image?.message && <p className="text-xs text-red-600">{errors.image.message}</p>}
-      </div>
 
-      <Button type="submit" loading={mutation.isPending} className="inline-flex items-center gap-2">
-        <Send size={16} />
-        Submit Complaint
-      </Button>
-    </form>
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row justify-end gap-4 mt-4 pt-6 border-t border-outline-variant border-opacity-50">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-[12px] rounded border border-outline-variant text-primary-container font-label-md text-label-md hover:bg-surface-container-low transition-colors text-center cursor-pointer"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={mutation.isPending}
+            className="px-6 py-[12px] rounded bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors text-center shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+          >
+            {mutation.isPending ? 'Submitting...' : 'Submit Complaint'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
+

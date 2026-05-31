@@ -34,13 +34,15 @@ export default function ComplaintList({
   const showPagination = Boolean(onPageChange) && totalPages > 1;
 
   return (
-    <div className="space-y-4">
-      {complaints.map((complaint) => (
-        <ComplaintCard key={complaint.id} complaint={complaint} onClick={onComplaintClick} />
-      ))}
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        {complaints.map((complaint) => (
+          <ComplaintCard key={complaint.id} complaint={complaint} onClick={onComplaintClick} />
+        ))}
+      </div>
 
       {showPagination && (
-        <div className="card flex items-center justify-between gap-3">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-center justify-between gap-3">
           <Button
             type="button"
             variant="secondary"
@@ -49,7 +51,7 @@ export default function ComplaintList({
           >
             Previous
           </Button>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm font-semibold text-primary">
             Page {currentPage} of {totalPages}
           </p>
           <Button

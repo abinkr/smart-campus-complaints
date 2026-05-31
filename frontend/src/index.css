@@ -13,9 +13,9 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #111827;
-  font-family: "Manrope", "Segoe UI", sans-serif;
+  background-color: #f8f9fa;
+  color: #191c1d;
+  font-family: "Inter", sans-serif;
 }
 
 button,
@@ -25,18 +25,24 @@ textarea {
   font: inherit;
 }
 
-.card {
-  @apply bg-white rounded-xl border border-gray-200 shadow-sm p-6;
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 .input-base {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply h-[48px] w-full bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface px-4 focus:outline-none focus:border-primary-container focus:ring-0 transition-all duration-200 shadow-sm hover:border-outline;
 }
 
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+.select-base {
+  @apply h-[48px] w-full bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface px-4 py-0 focus:outline-none focus:border-primary-container focus:ring-0 transition-all duration-200 shadow-sm hover:border-outline appearance-none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2375777c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 
-.badge-base {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+.label-base {
+  @apply block font-label-md text-label-md text-on-surface-variant mb-1.5 uppercase tracking-wider;
 }
+
