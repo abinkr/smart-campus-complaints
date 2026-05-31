@@ -34,10 +34,11 @@ const PRIORITY_LABELS = {
  * @param {{ priority: 'HIGH' | 'MEDIUM' | 'LOW', className?: string }} props
  */
 export default function PriorityBadge({ priority, className = '' }) {
+  const normalizedPriority = String(priority || '').toUpperCase();
   const styleClass =
-    PRIORITY_STYLES[priority] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
-  const dotClass = PRIORITY_DOT_STYLES[priority] ?? 'bg-gray-400';
-  const label = PRIORITY_LABELS[priority] ?? priority ?? 'Unknown';
+    PRIORITY_STYLES[normalizedPriority] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
+  const dotClass = PRIORITY_DOT_STYLES[normalizedPriority] ?? 'bg-gray-400';
+  const label = PRIORITY_LABELS[normalizedPriority] ?? priority ?? 'Unknown';
 
   return (
     <span

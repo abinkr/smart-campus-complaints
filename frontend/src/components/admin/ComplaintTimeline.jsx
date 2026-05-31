@@ -97,7 +97,7 @@ export default function ComplaintTimeline({ logs = [], isLoading = false }) {
 
               {/* Admin name + timestamp */}
               <p className="mt-1.5 text-xs text-gray-500">
-                <span className="font-medium text-gray-700">{log.changedBy}</span>
+                <span className="font-medium text-gray-700">{log.admin?.name || log.changedBy || 'System'}</span>
                 {' · '}
                 <time dateTime={log.changedAt}>
                   {formatDateTime(log.changedAt)}

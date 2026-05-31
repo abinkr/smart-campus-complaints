@@ -1,11 +1,10 @@
-// src/pages/admin/AdminDashboard.jsx
-// Admin Dashboard page. Replaces the old version.
-//
-// Shows 4 metric cards, 3 charts, and a recent activity feed.
-// Uses simulated async loading via fetchMockAnalytics and fetchRecentComplaints.
-
 import { useEffect, useState } from 'react';
-import { fetchMockAnalytics, fetchRecentComplaints } from '../../data/mockApi';
+import {
+  getSummaryAnalytics,
+  getByCategoryAnalytics,
+  getMonthlyTrendAnalytics,
+  getAllComplaints
+} from '../../api/adminApi';
 import { AlertCircle, CheckCircle2, Clock3, ListChecks } from 'lucide-react';
 import {
   Bar,
@@ -34,7 +33,9 @@ const PIE_COLORS = {
 };
 
 export default function AdminDashboard() {
-  const [analytics, setAnalytics] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
+  const [categoryData, setCategoryData] = useState([]);
+  const [trendData, setTrendData] = useState([]);
   const [recent, setRecent] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,11 +43,18 @@ export default function AdminDashboard() {
     let cancelled = false;
     setIsLoading(true);
 
-    Promise.all([fetchMockAnalytics(), fetchRecentComplaints(5)])
-      .then(([analyticsData, recentData]) => {
+    Promise.all([
+      getSummaryAnalytics(),
+      getByCategoryAnalytics(),
+      getMonthlyTrendAnalytics(),
+      getAllComplaints({ limit: 5 })
+    ])
+      .then(([summary, categories, trend, complaintsResult]) => {
         if (!cancelled) {
-          setAnalytics(analyticsData);
-          setRecent(recentData);
+          setSummaryData(summary);
+          setCategoryData(categories || []);
+          setTrendData(trend || []);
+          setRecent(complaintsResult?.complaints || []);
           setIsLoading(false);
         }
       })
@@ -60,10 +68,19 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const sum = analytics?.summary || { total: 0, pending: 0, resolved: 0, avgResolutionTime: '0h' };
-  const catData = analytics?.categoryData || [];
-  const statData = analytics?.statusData || [];
-  const trendData = analytics?.monthlyTrendData || [];
+  const sum = {
+    total: summaryData?.total ?? 0,
+    pending: summaryData?.pending ?? 0,
+    resolved: summaryData?.resolved ?? 0,
+    avgResolutionTime: summaryData?.avgResolutionDays ? `${summaryData.avgResolutionDays} days` : '0 days'
+  };
+
+  const catData = categoryData;
+  const statData = summaryData?.statusDistribution ? [
+    { name: 'Open', value: summaryData.statusDistribution.OPEN || 0 },
+    { name: 'In Progress', value: summaryData.statusDistribution.IN_PROGRESS || 0 },
+    { name: 'Resolved', value: summaryData.statusDistribution.RESOLVED || 0 }
+  ] : [];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">

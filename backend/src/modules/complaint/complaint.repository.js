@@ -105,6 +105,14 @@ export const findComplaintById = (id) =>
         },
       },
       logs: {
+        include: {
+          admin: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
         orderBy: {
           changedAt: 'desc',
         },

@@ -1,9 +1,5 @@
-// src/pages/admin/Analytics.jsx
-// Deep-dive Analytics page for the admin portal.
-// Uses simulated async loading via fetchMockAnalytics and fetchDepartmentAnalytics.
-
 import { useEffect, useState } from 'react';
-import { fetchMockAnalytics, fetchDepartmentAnalytics } from '../../data/mockApi';
+import { getMonthlyTrendAnalytics, getDepartmentPerformanceAnalytics } from '../../api/adminApi';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import ChartCard from '../../components/ui/ChartCard';
 
@@ -37,11 +33,20 @@ export default function Analytics() {
     let cancelled = false;
     setIsLoading(true);
 
-    Promise.all([fetchMockAnalytics(), fetchDepartmentAnalytics()])
-      .then(([analyticsData, deptData]) => {
+    Promise.all([getMonthlyTrendAnalytics(), getDepartmentPerformanceAnalytics()])
+      .then(([trendDataRes, deptDataRes]) => {
         if (!cancelled) {
-          setTrendData(analyticsData.monthlyTrendData || []);
-          setDepartmentData(deptData || []);
+          setTrendData(trendDataRes || []);
+          
+          // Map backend performance metrics to the keys expected by the UI charts and table
+          const mappedDeptData = (deptDataRes || []).map((d) => ({
+            department: d.department || 'Unassigned',
+            totalComplaints: d.total || 0,
+            resolved: d.resolved || 0,
+            avgResolutionDays: d.avgDays !== null && d.avgDays !== undefined ? d.avgDays : 0
+          }));
+          
+          setDepartmentData(mappedDeptData);
           setIsLoading(false);
         }
       })

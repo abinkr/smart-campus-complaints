@@ -1,12 +1,5 @@
-// src/pages/admin/ComplaintManagement.jsx
-// Complaint Management page. Replaces the old version.
-//
-// Hosts the ComplaintFilters, ComplaintTable, PaginationControls, and ComplaintDetailPanel.
-// Integrates with mockApi for fetching and updating.
-
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { fetchMockComplaints, updateMockComplaint } from '../../data/mockApi';
-import { exportComplaintsCsv } from '../../utils/exportCsv';
+import { getAllComplaints, updateComplaint, exportCSV } from '../../api/adminApi';
 import { Download } from 'lucide-react';
 
 import ComplaintFilters from '../../components/admin/ComplaintFilters';
@@ -40,12 +33,12 @@ export default function ComplaintManagement() {
     let cancelled = false;
     setIsLoading(true);
 
-    fetchMockComplaints(filters).then((result) => {
+    getAllComplaints(filters).then((result) => {
       if (!cancelled) {
         setData({
           complaints: result.complaints,
-          totalCount: result.totalCount,
-          totalPages: result.totalPages
+          totalCount: result.pagination?.total || 0,
+          totalPages: result.pagination?.totalPages || 1
         });
         setIsLoading(false);
 
@@ -55,6 +48,9 @@ export default function ComplaintManagement() {
           if (updated) setSelectedComplaint(updated);
         }
       }
+    }).catch((err) => {
+      console.error('Failed to load complaints:', err);
+      if (!cancelled) setIsLoading(false);
     });
 
     return () => { cancelled = true; };
@@ -66,12 +62,8 @@ export default function ComplaintManagement() {
       clearTimeout(searchDebounceRef.current);
     }
     
-    // We only need to debounce if they are typing in search.
-    // Dropdowns we could fetch immediately, but a uniform 300ms debounce is fine for mock.
     searchDebounceRef.current = setTimeout(() => {
       const cancel = loadComplaints();
-      // We don't have a clean way to pass the cancel fn out of setTimeout here
-      // without extra refs, but the mock API is fast enough that it's safe.
     }, 300);
 
     return () => {
@@ -93,16 +85,14 @@ export default function ComplaintManagement() {
   }
 
   async function handleSaveComplaint(id, changes) {
-    await updateMockComplaint(id, changes);
+    await updateComplaint(id, changes);
     // Re-fetch the list to see updated status in the table immediately
     loadComplaints();
     closePanel();
   }
 
   function handleExportCsv() {
-    // In a real app, this would hit an API endpoint that returns a CSV blob for the current filters.
-    // For this mock, we export the current page of data.
-    exportComplaintsCsv(data.complaints, `complaints-page${filters.page}`);
+    exportCSV(filters);
   }
 
   // --- Render ---

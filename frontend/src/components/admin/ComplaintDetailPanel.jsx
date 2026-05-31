@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useFocusTrap } from '../../utils/useFocusTrap';
 import { formatDate } from '../../utils/formatDate';
-import { fetchMockComplaintLogs } from '../../data/mockApi';
+import { getComplaintById } from '../../api/complaintApi';
 import PriorityBadge from '../ui/PriorityBadge';
 import StatusBadge from '../ui/StatusBadge';
 import ComplaintTimeline from './ComplaintTimeline';
@@ -64,11 +64,14 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
       // Fetch logs
       let cancelled = false;
       setIsLoadingLogs(true);
-      fetchMockComplaintLogs(complaint.id).then((fetchedLogs) => {
+      getComplaintById(complaint.id).then((res) => {
         if (!cancelled) {
-          setLogs(fetchedLogs);
+          setLogs(res.complaint?.logs || []);
           setIsLoadingLogs(false);
         }
+      }).catch((err) => {
+        console.error('Failed to load complaint details:', err);
+        if (!cancelled) setIsLoadingLogs(false);
       });
       return () => {
         cancelled = true;

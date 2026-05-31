@@ -1,7 +1,7 @@
 import { prisma } from '../../config/prisma.js'
 
 export const getSummaryStats = async () => {
-  const [total, pending, resolved, avgResult] = await Promise.all([
+  const [total, pending, resolved, avgResult, statusCounts] = await Promise.all([
     prisma.complaint.count(),
     prisma.complaint.count({
       where: {
@@ -22,13 +22,34 @@ export const getSummaryStats = async () => {
       FROM complaints
       WHERE resolved_at IS NOT NULL
     `,
+    prisma.complaint.groupBy({
+      by: ['status'],
+      _count: {
+        _all: true,
+      },
+    }),
   ])
+
+  const statusMap = {
+    OPEN: 0,
+    IN_PROGRESS: 0,
+    RESOLVED: 0,
+  }
+  
+  if (Array.isArray(statusCounts)) {
+    statusCounts.forEach(row => {
+      if (row.status) {
+        statusMap[row.status.toUpperCase()] = row._count._all
+      }
+    })
+  }
 
   return {
     total,
     pending,
     resolved,
     avgResolutionDays: Number(avgResult[0]?.avg_days ?? 0),
+    statusDistribution: statusMap,
   }
 }
 

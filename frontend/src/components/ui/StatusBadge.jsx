@@ -28,8 +28,9 @@ const STATUS_LABELS = {
  * @param {{ status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED', className?: string }} props
  */
 export default function StatusBadge({ status, className = '' }) {
-  const styleClass = STATUS_STYLES[status] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
-  const label = STATUS_LABELS[status] ?? status ?? 'Unknown';
+  const normalizedStatus = String(status || '').toUpperCase();
+  const styleClass = STATUS_STYLES[normalizedStatus] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
+  const label = STATUS_LABELS[normalizedStatus] ?? status ?? 'Unknown';
 
   return (
     <span
