@@ -41,12 +41,6 @@ export default function ComplaintManagement() {
           totalPages: result.pagination?.totalPages || 1
         });
         setIsLoading(false);
-
-        // If a complaint is currently selected, update its local copy so the panel reflects new state
-        if (selectedComplaint) {
-          const updated = result.complaints.find((c) => c.id === selectedComplaint.id);
-          if (updated) setSelectedComplaint(updated);
-        }
       }
     }).catch((err) => {
       console.error('Failed to load complaints:', err);
@@ -54,7 +48,7 @@ export default function ComplaintManagement() {
     });
 
     return () => { cancelled = true; };
-  }, [filters, selectedComplaint]);
+  }, [filters]);
 
   // Debounce fetch when filters change (especially for search)
   useEffect(() => {
