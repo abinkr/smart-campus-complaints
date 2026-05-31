@@ -187,11 +187,12 @@ export const verifyMfaLogin = async (dto, { expectedRole } = {}) => {
 }
 
 export const refreshSession = async (incomingToken) => {
-  const { accessToken, refreshToken } = await rotateRefreshToken(incomingToken)
+  const { accessToken, refreshToken, user } = await rotateRefreshToken(incomingToken)
 
   return {
     accessToken,
     refreshToken,
+    user,
   }
 }
 

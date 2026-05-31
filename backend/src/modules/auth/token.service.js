@@ -94,7 +94,8 @@ export const rotateRefreshToken = async (incomingRefreshToken) => {
     },
   })
 
-  return generateTokenPair(stored.user)
+  const tokens = await generateTokenPair(stored.user)
+  return { ...tokens, user: stored.user }
 }
 
 export const blacklistAccessToken = async (token, expiresIn) => {
@@ -116,11 +117,15 @@ export const revokeAllUserTokens = async (userId) => {
   })
 }
 
+// The frontend and backend are always on different origins (cross-origin).
+// SameSite=Lax cookies are NOT sent on cross-origin POST requests.
+// We must use SameSite=None + Secure=true for the cookie to be sent with
+// the /api/auth/refresh request after a page reload in all environments.
 export const setRefreshTokenCookie = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: REFRESH_TOKEN_EXPIRY_MS,
     path: '/api/auth',
   })
@@ -129,8 +134,8 @@ export const setRefreshTokenCookie = (res, token) => {
 export const clearRefreshTokenCookie = (res) => {
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/api/auth',
   })
 }

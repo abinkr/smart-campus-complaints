@@ -42,10 +42,10 @@ export const refresh = async (req, res) => {
     throw new UnauthorizedError('No refresh token provided')
   }
 
-  const { refreshToken, accessToken } = await authService.refreshSession(token)
+  const { refreshToken, accessToken, user } = await authService.refreshSession(token)
   setRefreshTokenCookie(res, refreshToken)
 
-  return ApiResponse.ok(res, { accessToken }, 'Token refreshed')
+  return ApiResponse.ok(res, { accessToken, user }, 'Token refreshed')
 }
 
 export const logout = async (req, res) => {
