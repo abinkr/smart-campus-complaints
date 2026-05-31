@@ -1,76 +1,211 @@
+// src/pages/admin/AdminDashboard.jsx
+// Admin Dashboard page. Replaces the old version.
+//
+// Shows 4 metric cards, 3 charts, and a recent activity feed.
+// Uses simulated async loading via fetchMockAnalytics and fetchRecentComplaints.
+
+import { useEffect, useState } from 'react';
+import { fetchMockAnalytics, fetchRecentComplaints } from '../../data/mockApi';
 import { AlertCircle, CheckCircle2, Clock3, ListChecks } from 'lucide-react';
-import CategoryBarChart from '../../components/charts/CategoryBarChart';
-import StatusPieChart from '../../components/charts/StatusPieChart';
-import Navbar from '../../components/layout/Navbar';
-import Sidebar from '../../components/layout/Sidebar';
-import Spinner from '../../components/ui/Spinner';
 import {
-  useByCategoryAnalytics,
-  useStatusBreakdown,
-  useSummaryAnalytics
-} from '../../hooks/useAnalytics';
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
 
-function MetricCard({ label, value, icon: Icon, tone }) {
-  const tones = {
-    blue: 'bg-blue-50 text-blue-700',
-    amber: 'bg-amber-50 text-amber-700',
-    green: 'bg-green-50 text-green-700',
-    indigo: 'bg-indigo-50 text-indigo-700'
-  };
+import MetricCard from '../../components/ui/MetricCard';
+import ChartCard from '../../components/ui/ChartCard';
+import RecentActivityFeed from '../../components/admin/RecentActivityFeed';
 
-  return (
-    <section className="card">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-600">{label}</p>
-        <span className={`rounded-lg p-2 ${tones[tone]}`}>
-          <Icon size={16} />
-        </span>
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-gray-900">{value}</p>
-    </section>
-  );
-}
+// Standard colors for the pie chart
+const PIE_COLORS = {
+  Open: '#ef4444',          // red-500
+  'In Progress': '#f59e0b', // amber-500
+  Resolved: '#10b981'       // emerald-500
+};
 
 export default function AdminDashboard() {
-  const summaryQuery = useSummaryAnalytics();
-  const categoryQuery = useByCategoryAnalytics();
-  const statusQuery = useStatusBreakdown();
+  const [analytics, setAnalytics] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (summaryQuery.isLoading || categoryQuery.isLoading || statusQuery.isLoading) {
-    return <Spinner fullPage />;
-  }
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
 
-  const summary = summaryQuery.data || {};
-  const categoryData = categoryQuery.data || [];
-  const statusData = statusQuery.data || [];
+    Promise.all([fetchMockAnalytics(), fetchRecentComplaints(5)])
+      .then(([analyticsData, recentData]) => {
+        if (!cancelled) {
+          setAnalytics(analyticsData);
+          setRecent(recentData);
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load dashboard data:', error);
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sum = analytics?.summary || { total: 0, pending: 0, resolved: 0, avgResolutionTime: '0h' };
+  const catData = analytics?.categoryData || [];
+  const statData = analytics?.statusData || [];
+  const trendData = analytics?.monthlyTrendData || [];
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
-      <Navbar />
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">Campus complaint overview and current workload.</p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Total Complaints" value={summary.total || 0} icon={ListChecks} tone="blue" />
-            <MetricCard label="Pending" value={summary.pending || 0} icon={AlertCircle} tone="amber" />
-            <MetricCard label="Resolved" value={summary.resolved || 0} icon={CheckCircle2} tone="green" />
-            <MetricCard
-              label="Avg Resolution Time"
-              value={`${summary.averageResolutionHours || 0}h`}
-              icon={Clock3}
-              tone="indigo"
-            />
-          </div>
-
-          <div className="mt-6 grid gap-4 xl:grid-cols-2">
-            <CategoryBarChart data={categoryData} />
-            <StatusPieChart data={statusData} />
-          </div>
-        </main>
+    <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
+      
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Admin Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Monitor campus complaints, resolution progress, and department workload.
+        </p>
       </div>
+
+      {/* KPI Metric Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          label="Total Complaints"
+          value={isLoading ? '...' : sum.total}
+          icon={ListChecks}
+          tone="blue"
+        />
+        <MetricCard
+          label="Pending Review"
+          value={isLoading ? '...' : sum.pending}
+          icon={AlertCircle}
+          tone="amber"
+          change={!isLoading ? "+2 since yesterday" : undefined}
+          changeType="negative"
+        />
+        <MetricCard
+          label="Resolved Cases"
+          value={isLoading ? '...' : sum.resolved}
+          icon={CheckCircle2}
+          tone="green"
+        />
+        <MetricCard
+          label="Avg Resolution Time"
+          value={isLoading ? '...' : sum.avgResolutionTime}
+          icon={Clock3}
+          tone="indigo"
+          change={!isLoading ? "Faster by 12%" : undefined}
+          changeType="positive"
+        />
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Bar Chart — Category */}
+        <ChartCard
+          title="Complaints by Category"
+          description="Distribution of issues across campus departments"
+          className="lg:col-span-2"
+        >
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={catData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                <Tooltip
+                  cursor={{ fill: '#f3f4f6' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        {/* Donut Chart — Status */}
+        <ChartCard
+          title="Status Breakdown"
+          description="Current resolution stage of all complaints"
+        >
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={statData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={90}
+                  paddingAngle={2}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {statData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[entry.name] || '#9ca3af'} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#111827', fontWeight: 500 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
+        {/* Line Chart — Trend */}
+        <ChartCard
+          title="Monthly Complaint Trend"
+          description="New complaints submitted over the last 6 months"
+          className="lg:col-span-2"
+        >
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#0a1422"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#0a1422', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#3b82f6', strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        {/* Recent Activity Feed */}
+        <div className="lg:col-span-1">
+          <RecentActivityFeed complaints={recent} isLoading={isLoading} />
+        </div>
+      </div>
+      
     </div>
   );
 }
