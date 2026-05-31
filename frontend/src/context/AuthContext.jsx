@@ -122,7 +122,9 @@ export function AuthProvider({ children }) {
       try {
         await refresh();
       } catch {
-        clearSession();
+        if (!tokenRef.current) {
+          clearSession();
+        }
       } finally {
         if (active) {
           setIsLoading(false);
