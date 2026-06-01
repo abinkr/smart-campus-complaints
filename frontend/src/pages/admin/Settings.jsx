@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, Lock, Settings as SettingsIcon, User, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import { getAdminSettings, updateAdminProfile, updateAdminNotifications, updateAdminSystem } from '../../api/adminApi';
 import axiosInstance from '../../api/axiosInstance';
 
@@ -18,6 +19,7 @@ const TABS = [
 
 export default function Settings() {
   const { logout } = useAuth();
+  const { timezone: systemTimezone, setTimezone: setSystemTimezone } = useSystemTimezone();
   const [activeTab, setActiveTab] = useState('profile');
   
   // States
@@ -42,7 +44,7 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // System Form State
-  const [timezone, setTimezone] = useState('Asia/Kolkata');
+  const [timezone, setTimezone] = useState(systemTimezone);
   const [retention, setRetention] = useState('3');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -61,7 +63,9 @@ export default function Settings() {
           setEmailAlerts(!!data.notifications?.emailInstantAlerts);
           setSmsAlerts(!!data.notifications?.smsCriticalAlerts);
           setDailyDigest(!!data.notifications?.emailDailyDigest);
-          setTimezone(data.system?.defaultTimezone || 'Asia/Kolkata');
+          const nextTimezone = data.system?.defaultTimezone || systemTimezone;
+          setTimezone(nextTimezone);
+          setSystemTimezone(nextTimezone);
           setRetention(data.system?.dataRetentionPolicy || '3');
           setIsLoading(false);
         }
@@ -74,8 +78,8 @@ export default function Settings() {
       }
     }
     load();
-    return () => { active = true; };
-  }, []);
+    return () => { active = false; };
+  }, [setSystemTimezone, systemTimezone]);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -118,10 +122,13 @@ export default function Settings() {
           logout({ skipRequest: true });
         }, 1500);
       } else if (activeTab === 'system') {
-        await updateAdminSystem({
+        const result = await updateAdminSystem({
           defaultTimezone: timezone,
           dataRetentionPolicy: retention
         });
+        const savedTimezone = result.defaultTimezone || timezone;
+        setTimezone(savedTimezone);
+        setSystemTimezone(savedTimezone);
         setSaveMessage('System preferences updated successfully.');
       }
     } catch (err) {

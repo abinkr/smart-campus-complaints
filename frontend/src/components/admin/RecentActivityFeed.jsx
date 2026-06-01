@@ -9,6 +9,7 @@
 //   isLoading  — boolean — shows skeleton while loading
 
 import { Link } from 'react-router-dom';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import { formatRelativeTime } from '../../utils/formatDate';
 import PriorityBadge from '../ui/PriorityBadge';
 import StatusBadge from '../ui/StatusBadge';
@@ -44,6 +45,8 @@ function getCategoryInitials(category) {
  * @param {{ complaints: Array, isLoading: boolean }} props
  */
 export default function RecentActivityFeed({ complaints = [], isLoading = false }) {
+  const { timezone } = useSystemTimezone();
+
   return (
     <section
       className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white shadow-sm min-h-[340px]"
@@ -90,7 +93,7 @@ export default function RecentActivityFeed({ complaints = [], isLoading = false 
                       dateTime={complaint.createdAt}
                       className="text-[11px] font-medium text-gray-500 shrink-0 mt-0.5"
                     >
-                      {formatRelativeTime(complaint.createdAt)}
+                      {formatRelativeTime(complaint.createdAt, timezone)}
                     </time>
                   </div>
                   <p className="mt-0.5 text-xs text-gray-500 truncate">

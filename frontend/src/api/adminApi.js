@@ -116,8 +116,8 @@ export async function getDepartmentPerformanceAnalytics() {
   }));
 }
 
-export async function getAdminSettings() {
-  const { data } = await axiosInstance.get('/api/admin/settings');
+export async function getAdminSettings(config = {}) {
+  const { data } = await axiosInstance.get('/api/admin/settings', config);
   return unwrapEnvelope(data);
 }
 

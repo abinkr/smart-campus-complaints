@@ -1,5 +1,6 @@
 import StatusBadge from '../ui/StatusBadge';
 import { formatDateTime } from '../../utils/formatDate';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import { ArrowRight, Clock, User, CheckCircle2, MessageSquare, AlertCircle } from 'lucide-react';
 
 function TimelineSkeleton() {
@@ -23,6 +24,8 @@ function TimelineSkeleton() {
 }
 
 export default function ActivityTimeline({ logs = [], isLoading = false }) {
+  const { timezone } = useSystemTimezone();
+
   if (isLoading) {
     return <TimelineSkeleton />;
   }
@@ -110,7 +113,7 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
                 <span className="font-semibold text-primary">{log.admin?.name || log.changedBy || 'System'}</span>
                 <span>•</span>
                 <time dateTime={log.changedAt} className="text-[11px] font-medium text-outline">
-                  {formatDateTime(log.changedAt)}
+                  {formatDateTime(log.changedAt, timezone)}
                 </time>
               </p>
 

@@ -7,6 +7,7 @@
 //   onRowClick — function(complaint) called when "View Details" or the row is clicked
 
 import { formatDate } from '../../utils/formatDate';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import PriorityBadge from '../ui/PriorityBadge';
 import StatusBadge from '../ui/StatusBadge';
 import { Eye, Inbox } from 'lucide-react';
@@ -37,6 +38,8 @@ function TableSkeleton() {
  * @param {{ complaints: Array, isLoading: boolean, onRowClick: (complaint) => void }} props
  */
 export default function ComplaintTable({ complaints = [], isLoading = false, onRowClick }) {
+  const { timezone } = useSystemTimezone();
+
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -90,7 +93,7 @@ export default function ComplaintTable({ complaints = [], isLoading = false, onR
                     <StatusBadge status={complaint.status} />
                   </td>
                   <td className="px-5 py-4 hidden sm:table-cell whitespace-nowrap">
-                    {formatDate(complaint.createdAt)}
+                    {formatDate(complaint.createdAt, timezone)}
                   </td>
                   <td className="px-5 py-4 text-right">
                     <button

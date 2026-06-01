@@ -2,13 +2,9 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import ActivityTimeline from './ActivityTimeline';
 import { getComplaintById } from '../../api/complaintApi';
+import { useSystemTimezone } from '../../context/TimezoneContext';
+import { formatDate } from '../../utils/formatDate';
 import { Sparkles, MessageSquare, AlertCircle, Calendar, Shield, MapPin, Eye } from 'lucide-react';
-
-function formatDate(date) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium'
-  }).format(new Date(date));
-}
 
 const STATUS_EXPLANATIONS = {
   open: "Your concern has been logged and is awaiting administrative triage.",
@@ -17,6 +13,7 @@ const STATUS_EXPLANATIONS = {
 };
 
 export default function ComplaintCard({ complaint, onClick }) {
+  const { timezone } = useSystemTimezone();
   const [isModalOpen, setModalOpen] = useState(false);
   const [detailedComplaint, setDetailedComplaint] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -129,7 +126,7 @@ export default function ComplaintCard({ complaint, onClick }) {
 
           <div className="flex justify-between items-center pt-1">
             <span className="font-label-md text-label-md text-outline font-medium">
-              {formatDate(complaint.createdAt)}
+              {formatDate(complaint.createdAt, timezone)}
             </span>
             <button
               onClick={openDetails}
@@ -207,7 +204,7 @@ export default function ComplaintCard({ complaint, onClick }) {
               </div>
               <div>
                 <p className="text-[10px] text-outline uppercase font-bold tracking-wider mb-0.5">Submitted On</p>
-                <p className="text-xs font-bold text-primary">{formatDate(complaint.createdAt)}</p>
+                <p className="text-xs font-bold text-primary">{formatDate(complaint.createdAt, timezone)}</p>
               </div>
             </div>
 

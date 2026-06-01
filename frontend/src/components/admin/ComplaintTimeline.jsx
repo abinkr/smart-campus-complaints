@@ -13,6 +13,7 @@
 //   isLoading — boolean — shows skeleton while logs are loading
 
 import StatusBadge from '../ui/StatusBadge';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import { formatDateTime } from '../../utils/formatDate';
 import { ArrowRight, ClockIcon } from 'lucide-react';
 
@@ -45,6 +46,8 @@ function TimelineSkeleton() {
  * @param {{ logs: Array, isLoading: boolean }} props
  */
 export default function ComplaintTimeline({ logs = [], isLoading = false }) {
+  const { timezone } = useSystemTimezone();
+
   if (isLoading) {
     return <TimelineSkeleton />;
   }
@@ -100,7 +103,7 @@ export default function ComplaintTimeline({ logs = [], isLoading = false }) {
                 <span className="font-medium text-gray-700">{log.admin?.name || log.changedBy || 'System'}</span>
                 {' · '}
                 <time dateTime={log.changedAt}>
-                  {formatDateTime(log.changedAt)}
+                  {formatDateTime(log.changedAt, timezone)}
                 </time>
               </p>
 

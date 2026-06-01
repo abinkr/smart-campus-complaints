@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { X, Image as ImageIcon, Loader2, Sparkles, MessageSquare, ShieldAlert } from 'lucide-react';
+import { useSystemTimezone } from '../../context/TimezoneContext';
 import { useFocusTrap } from '../../utils/useFocusTrap';
 import { formatDate } from '../../utils/formatDate';
 import { getComplaintById } from '../../api/complaintApi';
@@ -21,6 +22,7 @@ const DEPARTMENTS = [
 ];
 
 export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
+  const { timezone } = useSystemTimezone();
   const panelRef = useRef(null);
   const isOpen = complaint !== null;
 
@@ -179,7 +181,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                     SUBMISSION DATE
                   </span>
                   <span className="font-semibold text-gray-900 block">
-                    {formatDate(complaint.createdAt)}
+                    {formatDate(complaint.createdAt, timezone)}
                   </span>
                 </div>
               </div>
