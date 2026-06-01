@@ -61,6 +61,13 @@ export const buildWhereClause = ({ category, priority, status, department, searc
 export const createComplaint = (data) =>
   prisma.complaint.create({
     data,
+    include: {
+      user: {
+        select: {
+          email: true,
+        },
+      },
+    },
   })
 
 export const findComplaintsByUser = async (userId, { status, page, limit }) => {

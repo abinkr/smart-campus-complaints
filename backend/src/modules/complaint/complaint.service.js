@@ -2,16 +2,13 @@ import axios from 'axios'
 import { config } from '../../config/index.js'
 import { uploadToCloudinary } from '../../config/cloudinary.js'
 import * as repo from './complaint.repository.js'
+import { emailQueue } from '../../queues/email.queue.js'
 import { nlpQueue } from '../../queues/nlp.queue.js'
+import { notifyHighPriorityComplaint } from '../admin/notification.service.js'
 import { ForbiddenError, NotFoundError } from '../../utils/ApiError.js'
 import { invalidateCachePattern, withCache } from '../../utils/cache.js'
 import { logger } from '../../utils/logger.js'
-
-const PRIORITY_MAP = {
-  high: 'HIGH',
-  medium: 'MEDIUM',
-  low: 'LOW',
-}
+import { applyClassificationOverrides, classifyComplaintText } from './nlp.classifier.js'
 
 const STATUS_EXPLANATIONS = {
   open: "Your concern has been logged and is awaiting administrative triage.",
@@ -34,24 +31,26 @@ export const callNlpService = async (text) => {
       nlpRequestOptions()
     )
 
-    return {
-      category: response.data.category ?? 'Other',
-      priority: PRIORITY_MAP[response.data.priority?.toLowerCase()] ?? 'MEDIUM',
-      confidence: response.data.category_confidence ?? response.data.confidence ?? 0,
-    }
+    return applyClassificationOverrides(text, response.data)
   } catch (err) {
     logger.warn({ err: err.message }, 'NLP service unavailable - using fallback')
 
-    return {
-      category: 'Other',
-      priority: 'MEDIUM',
-      confidence: 0,
+    return classifyComplaintText(text)
+  }
+}
+
+const logRejectedSideEffects = (results) => {
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      logger.warn({ err: result.reason }, 'Complaint post-submit side effect failed')
     }
   }
 }
 
 export const submitComplaint = async (userId, body, file) => {
   let imageUrl = null
+  const text = `${body.title ?? ''} ${body.description ?? ''}`.trim()
+  const initialClassification = classifyComplaintText(text)
 
   if (file) {
     const result = await uploadToCloudinary(file.buffer, 'campus-complaints')
@@ -63,6 +62,9 @@ export const submitComplaint = async (userId, body, file) => {
     title: body.title,
     description: body.description,
     imageUrl,
+    category: initialClassification.category,
+    priority: initialClassification.priority,
+    nlpConfidence: initialClassification.confidence,
     status: 'OPEN',
   })
 
@@ -75,26 +77,33 @@ export const submitComplaint = async (userId, body, file) => {
     isInternal: false,
   })
 
-  nlpQueue.add(
-    'classify',
-    {
-      complaintId: complaint.id,
-      text: `${body.title} ${body.description}`,
-    },
-    {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000,
-      },
-    }
-  )
-
   Promise.allSettled([
+    nlpQueue.add(
+      'classify',
+      {
+        complaintId: complaint.id,
+        text,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      }
+    ),
+    emailQueue.add('confirmation', {
+      to: complaint.user?.email,
+      complaintId: complaint.id,
+      title: complaint.title,
+      category: complaint.category,
+      priority: complaint.priority,
+    }),
+    notifyHighPriorityComplaint(complaint),
     invalidateCachePattern(`complaints:user:${userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
     invalidateCachePattern('analytics:*'),
-  ])
+  ]).then(logRejectedSideEffects)
 
   return complaint
 }

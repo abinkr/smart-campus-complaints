@@ -4,15 +4,9 @@ import { redis } from '../config/redis.js'
 import { prisma } from '../config/prisma.js'
 import { config } from '../config/index.js'
 import { logger } from '../utils/logger.js'
-import { emailQueue } from '../queues/email.queue.js'
 import { invalidateCachePattern } from '../utils/cache.js'
 import { notifyHighPriorityComplaint } from '../modules/admin/notification.service.js'
-
-const PRIORITY_MAP = {
-  high: 'HIGH',
-  medium: 'MEDIUM',
-  low: 'LOW',
-}
+import { applyClassificationOverrides, classifyComplaintText } from '../modules/complaint/nlp.classifier.js'
 
 const nlpRequestOptions = () => ({
   timeout: config.NLP_TIMEOUT_MS,
@@ -26,9 +20,7 @@ export const nlpWorker = new Worker(
   async (job) => {
     const { complaintId, text } = job.data
 
-    let category = 'Other'
-    let priority = 'MEDIUM'
-    let confidence = 0
+    let classification = classifyComplaintText(text)
 
     try {
       const response = await axios.post(
@@ -37,9 +29,7 @@ export const nlpWorker = new Worker(
         nlpRequestOptions()
       )
 
-      category = response.data.category ?? 'Other'
-      priority = PRIORITY_MAP[response.data.priority?.toLowerCase()] ?? 'MEDIUM'
-      confidence = response.data.category_confidence ?? response.data.confidence ?? 0
+      classification = applyClassificationOverrides(text, response.data)
     } catch (err) {
       logger.warn({ err: err.message, complaintId }, 'NLP service call failed in worker')
     }
@@ -49,9 +39,9 @@ export const nlpWorker = new Worker(
         id: complaintId,
       },
       data: {
-        category,
-        priority,
-        nlpConfidence: confidence,
+        category: classification.category,
+        priority: classification.priority,
+        nlpConfidence: classification.confidence,
       },
       include: {
         user: {
@@ -63,30 +53,21 @@ export const nlpWorker = new Worker(
     })
 
     await Promise.allSettled([
-      emailQueue.add(
-        'confirmation',
-        {
-          to: updated.user.email,
-          complaintId: updated.id,
-          title: updated.title,
-          category,
-          priority,
-        },
-        {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 5000,
-          },
-        }
-      ),
       notifyHighPriorityComplaint(updated),
       invalidateCachePattern('analytics:*'),
       invalidateCachePattern(`complaints:user:${updated.userId}:*`),
       invalidateCachePattern('admin:complaints:*'),
     ])
 
-    logger.info({ complaintId, category, priority }, 'NLP classification complete')
+    logger.info(
+      {
+        complaintId,
+        category: classification.category,
+        priority: classification.priority,
+        source: classification.source,
+      },
+      'NLP classification complete'
+    )
   },
   {
     connection: redis,

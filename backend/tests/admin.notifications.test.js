@@ -121,6 +121,32 @@ describe('admin notification service', () => {
     expect(mocks.emailQueue.add).not.toHaveBeenCalled()
   })
 
+  it('does not send duplicate emails when high-priority notifications already exist', async () => {
+    mocks.findManyUsers.mockResolvedValue([
+      {
+        id: 'admin-1',
+        name: 'Email Admin',
+        email: 'email@campus.edu',
+        emailInstantAlerts: true,
+        emailDailyDigest: true,
+      },
+    ])
+    mocks.createMany.mockResolvedValue({ count: 0 })
+
+    await notificationService.notifyHighPriorityComplaint({
+      id: '33333333-3333-3333-3333-333333333333',
+      title: 'Fire near library',
+      category: 'Electrical',
+      priority: 'HIGH',
+      status: 'OPEN',
+      department: null,
+      createdAt: new Date('2026-06-01T11:00:00.000Z'),
+    })
+
+    expect(mocks.createMany).toHaveBeenCalled()
+    expect(mocks.emailQueue.add).not.toHaveBeenCalled()
+  })
+
   it('returns notifications with unread count', async () => {
     const notifications = [
       {

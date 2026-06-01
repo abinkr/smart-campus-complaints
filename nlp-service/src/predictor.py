@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import joblib
 import numpy as np
@@ -7,22 +8,188 @@ import numpy as np
 from config import MODEL_DIR
 from src.preprocessor import clean_text
 
+MODEL_CATEGORY_MAP = {
+    "Electricity": "Electrical",
+    "Water": "Plumbing",
+    "Network": "IT",
+    "Sanitation": "Cleaning",
+    "Furniture": "Maintenance",
+}
+
+CATEGORY_KEYWORDS = [
+    (
+        "Electrical",
+        {
+            "fire",
+            "smoke",
+            "burning",
+            "electricity",
+            "electrical",
+            "power",
+            "power cut",
+            "power outage",
+            "no electricity",
+            "short circuit",
+            "spark",
+            "sparking",
+            "shock",
+            "electric shock",
+            "electrocution",
+            "exposed wire",
+            "wire",
+            "wiring",
+            "switch",
+            "socket",
+            "outlet",
+            "breaker",
+            "voltage",
+            "light",
+            "fan",
+            "ac",
+        },
+    ),
+    (
+        "Plumbing",
+        {
+            "water",
+            "no water",
+            "water not coming",
+            "drinking water",
+            "water cooler",
+            "tap",
+            "pipe",
+            "leak",
+            "leaking",
+            "burst pipe",
+            "flood",
+            "flooding",
+            "overflow",
+            "drain",
+            "toilet",
+            "bathroom",
+            "washroom",
+            "flush",
+            "sink",
+            "sewer",
+            "sewage",
+        },
+    ),
+    (
+        "IT",
+        {
+            "wifi",
+            "wi-fi",
+            "internet",
+            "network",
+            "server",
+            "login",
+            "portal",
+            "website",
+            "app",
+            "software",
+            "computer",
+            "pc",
+            "lab pc",
+            "printer",
+            "projector",
+            "rfid",
+            "system error",
+            "password",
+        },
+    ),
+    (
+        "Cleaning",
+        {
+            "cleaning",
+            "dirty",
+            "garbage",
+            "trash",
+            "waste",
+            "dustbin",
+            "smell",
+            "odor",
+            "odour",
+            "hygiene",
+            "sanitation",
+            "mosquito",
+            "pest",
+            "graffiti",
+        },
+    ),
+    (
+        "Maintenance",
+        {
+            "broken",
+            "repair",
+            "damaged",
+            "furniture",
+            "chair",
+            "bench",
+            "desk",
+            "table",
+            "door",
+            "window",
+            "lock",
+            "ceiling",
+            "roof",
+            "wall",
+            "floor",
+            "lift",
+            "elevator",
+            "classroom",
+            "infrastructure",
+        },
+    ),
+    (
+        "Administration",
+        {
+            "fee",
+            "fees",
+            "scholarship",
+            "certificate",
+            "exam",
+            "timetable",
+            "attendance",
+            "id card",
+            "canteen",
+            "cafeteria",
+            "food",
+            "office",
+            "document",
+            "admission",
+            "library",
+        },
+    ),
+]
+
 HIGH_KEYWORDS = {
     "fire",
+    "smoke",
     "flood",
+    "flooding",
     "short circuit",
+    "electric shock",
     "electrocution",
     "shock",
     "collapse",
+    "collapsed",
     "emergency",
     "urgent",
     "danger",
+    "dangerous",
     "hazard",
+    "hazardous",
     "injury",
     "injured",
     "burning",
     "burst",
+    "burst pipe",
     "overflow",
+    "sewage leak",
+    "gas leak",
+    "exposed wire",
+    "contaminated",
+    "food poisoning",
     "accident",
 }
 
@@ -38,6 +205,49 @@ LOW_KEYWORDS = {
     "would be nice",
     "if possible",
 }
+
+HIGH_CONTEXT_PATTERNS = (
+    re.compile(
+        r"\b(no water|water not coming|no electricity|power outage|internet down|network down)\b"
+        r".*\b(entire|whole|all|hostel|building|block|campus|exam|lab|server|urgent|emergency)\b"
+    ),
+    re.compile(
+        r"\b(entire|whole|all|hostel|building|block|campus|exam|lab|server|urgent|emergency)\b"
+        r".*\b(no water|water not coming|no electricity|power outage|internet down|network down)\b"
+    ),
+)
+
+
+def _contains_keyword(text_lower: str, keyword: str) -> bool:
+    pattern = re.escape(keyword).replace(r"\ ", r"\s+")
+    return re.search(rf"(?<![a-z0-9]){pattern}(?![a-z0-9])", text_lower) is not None
+
+
+def _matches_any(text_lower: str, keywords: set[str]) -> bool:
+    return any(_contains_keyword(text_lower, keyword) for keyword in keywords)
+
+
+def _keyword_category(text_lower: str) -> str | None:
+    for category, keywords in CATEGORY_KEYWORDS:
+        if _matches_any(text_lower, keywords):
+            return category
+    return None
+
+
+def _canonical_category(category: str) -> str:
+    return MODEL_CATEGORY_MAP.get(category, category)
+
+
+def _keyword_priority(text_lower: str) -> str | None:
+    if _matches_any(text_lower, HIGH_KEYWORDS) or any(
+        pattern.search(text_lower) for pattern in HIGH_CONTEXT_PATTERNS
+    ):
+        return "HIGH"
+
+    if _matches_any(text_lower, LOW_KEYWORDS):
+        return "LOW"
+
+    return None
 
 
 class Predictor:
@@ -89,7 +299,7 @@ class Predictor:
         cat_proba = self.cat_pipeline.predict_proba([clean])[0]
         cat_idx = int(np.argmax(cat_proba))
         cat_conf = float(cat_proba[cat_idx])
-        category = self.cat_encoder.inverse_transform([cat_idx])[0]
+        category = _canonical_category(self.cat_encoder.inverse_transform([cat_idx])[0])
 
         pri_proba = self.pri_pipeline.predict_proba([clean])[0]
         pri_idx = int(np.argmax(pri_proba))
@@ -97,12 +307,20 @@ class Predictor:
         priority = self.pri_encoder.inverse_transform([pri_idx])[0]
 
         override_applied = False
+        keyword_category = _keyword_category(text_lower)
 
-        if any(keyword in text_lower for keyword in HIGH_KEYWORDS):
+        if keyword_category and keyword_category != category:
+            category = keyword_category
+            cat_conf = 0.95
+            override_applied = True
+
+        keyword_priority = _keyword_priority(text_lower)
+
+        if keyword_priority == "HIGH":
             priority = "HIGH"
             pri_conf = 1.0
             override_applied = True
-        elif any(keyword in text_lower for keyword in LOW_KEYWORDS) and priority != "HIGH":
+        elif keyword_priority == "LOW" and priority != "HIGH":
             priority = "LOW"
             pri_conf = 0.9
             override_applied = True
@@ -137,7 +355,7 @@ class Predictor:
 
         cat_proba = self.cat_pipeline.predict_proba([clean])[0]
         cat_idx = int(np.argmax(cat_proba))
-        category = self.cat_encoder.inverse_transform([cat_idx])[0]
+        category = _canonical_category(self.cat_encoder.inverse_transform([cat_idx])[0])
 
         try:
             import eli5

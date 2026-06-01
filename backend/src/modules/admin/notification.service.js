@@ -120,7 +120,7 @@ export const notifyHighPriorityComplaint = async (complaint) => {
   const message = `${complaint.title} needs urgent review.`
   const summary = complaintSummary(complaint)
 
-  await prisma.notification.createMany({
+  const created = await prisma.notification.createMany({
     data: admins.map(admin => ({
       userId: admin.id,
       complaintId: complaint.id,
@@ -130,6 +130,10 @@ export const notifyHighPriorityComplaint = async (complaint) => {
     })),
     skipDuplicates: true,
   })
+
+  if (created.count === 0) {
+    return
+  }
 
   const sideEffects = admins
     .filter(admin => admin.emailInstantAlerts)
