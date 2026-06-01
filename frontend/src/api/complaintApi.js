@@ -66,3 +66,10 @@ export async function getComplaintById(id) {
     complaint: normalizeComplaint(unwrapEnvelope(data))
   };
 }
+
+export async function submitFollowUp(id, message) {
+  const { data } = await axiosInstance.post(`/api/complaints/${id}/follow-ups`, {
+    message
+  });
+  return unwrapEnvelope(data);
+}

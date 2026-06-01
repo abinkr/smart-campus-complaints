@@ -202,7 +202,6 @@ export const submitFollowUp = async (complaintId, studentId, body) => {
   }
 
   const oldStatus = complaint.status
-  const logNote = `Student follow-up: "${body.message.slice(0, 60)}${body.message.length > 60 ? '...' : ''}"`
 
   const followUp = await repo.createFollowUpAndLog(
     {
@@ -215,7 +214,7 @@ export const submitFollowUp = async (complaintId, studentId, body) => {
       changedBy: studentId,
       oldStatus,
       newStatus: 'OPEN',
-      note: logNote,
+      note: body.message,
       isInternal: false,
     }
   )

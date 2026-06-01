@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import ActivityTimeline from './ActivityTimeline';
-import { getComplaintById } from '../../api/complaintApi';
+import { getComplaintById, submitFollowUp } from '../../api/complaintApi';
 import { useSystemTimezone } from '../../context/TimezoneContext';
-import { formatDate } from '../../utils/formatDate';
+import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { Sparkles, MessageSquare, AlertCircle, Calendar, Shield, MapPin, Eye } from 'lucide-react';
 
 const STATUS_EXPLANATIONS = {
@@ -17,13 +17,11 @@ export default function ComplaintCard({ complaint, onClick }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [detailedComplaint, setDetailedComplaint] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [followUpMessage, setFollowUpMessage] = useState('');
+  const [followUpError, setFollowUpError] = useState('');
+  const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
 
-  async function openDetails() {
-    if (onClick) {
-      onClick(complaint);
-      return;
-    }
-    setModalOpen(true);
+  async function loadDetails() {
     setIsLoadingDetails(true);
     try {
       const res = await getComplaintById(complaint.id);
@@ -32,6 +30,39 @@ export default function ComplaintCard({ complaint, onClick }) {
       console.error('Failed to load complaint details:', err);
     } finally {
       setIsLoadingDetails(false);
+    }
+  }
+
+  async function openDetails() {
+    if (onClick) {
+      onClick(complaint);
+      return;
+    }
+    setModalOpen(true);
+    setFollowUpError('');
+    await loadDetails();
+  }
+
+  async function handleFollowUpSubmit(event) {
+    event.preventDefault();
+    const message = followUpMessage.trim();
+
+    if (message.length < 3 || isSendingFollowUp) {
+      return;
+    }
+
+    setIsSendingFollowUp(true);
+    setFollowUpError('');
+
+    try {
+      await submitFollowUp(complaint.id, message);
+      setFollowUpMessage('');
+      await loadDetails();
+    } catch (err) {
+      console.error('Failed to submit follow-up:', err);
+      setFollowUpError(err.response?.data?.message || 'Unable to send follow-up. Please try again.');
+    } finally {
+      setIsSendingFollowUp(false);
     }
   }
 
@@ -71,6 +102,8 @@ export default function ComplaintCard({ complaint, onClick }) {
 
   // Determine current active display details (fallback to list details if dynamic fetch hasn't completed)
   const activeDetail = detailedComplaint || complaint;
+  const studentFollowUps = activeDetail.studentFollowUps || [];
+  const canSendFollowUp = followUpMessage.trim().length >= 3 && !isSendingFollowUp;
 
   return (
     <>
@@ -259,29 +292,52 @@ export default function ComplaintCard({ complaint, onClick }) {
               <ActivityTimeline logs={activeDetail.logs || []} isLoading={isLoadingDetails} />
             </div>
 
-            {/* Student Follow-Up / Message Replies (Mock Layout - UI Ready) */}
+            {/* Student Follow-Up / Message Replies */}
             <div className="space-y-3 pt-4 border-t border-outline-variant/40">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold uppercase tracking-wider text-outline">Student Reply Thread</p>
-                <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  UI-Ready • Backend Migration Required
-                </span>
               </div>
-              <div className="bg-surface-container-low/40 border border-outline-variant/50 rounded-xl p-4 space-y-3 opacity-60 pointer-events-none">
+
+              {studentFollowUps.length > 0 && (
+                <div className="space-y-2">
+                  {studentFollowUps.map((reply) => (
+                    <div key={reply.id} className="rounded-xl border border-outline-variant/50 bg-white p-3 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-outline font-bold">
+                        <span>{reply.student?.name || 'You'}</span>
+                        <span>{formatDateTime(reply.createdAt, timezone)}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-primary leading-relaxed whitespace-pre-wrap break-words">
+                        {reply.message}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form
+                onSubmit={handleFollowUpSubmit}
+                className="bg-surface-container-low/40 border border-outline-variant/50 rounded-xl p-4 space-y-3"
+              >
                 <textarea
                   rows={2}
-                  disabled
-                  placeholder="Need to add more information or ask for a follow-up? (Feature placeholder)"
+                  value={followUpMessage}
+                  onChange={(event) => setFollowUpMessage(event.target.value)}
+                  disabled={isSendingFollowUp}
+                  maxLength={2000}
+                  placeholder="Need to add more information or ask for a follow-up?"
                   className="w-full bg-white border border-outline-variant/60 rounded-lg p-2.5 text-xs text-on-surface focus:outline-none"
                 />
+                {followUpError && (
+                  <p className="text-xs font-semibold text-red-600">{followUpError}</p>
+                )}
                 <button
-                  type="button"
-                  disabled
-                  className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-not-allowed"
+                  type="submit"
+                  disabled={!canSendFollowUp}
+                  className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Send Follow-up Message
+                  {isSendingFollowUp ? 'Sending...' : 'Send Follow-up Message'}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </Modal>
