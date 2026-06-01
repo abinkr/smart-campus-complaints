@@ -60,16 +60,11 @@ export const patchPrioritySchema = z.object({
 
 export const profileUpdateSchema = z.object({
   name: z.string().trim().min(2).max(100),
-  phoneNumber: z.preprocess(
-    value => (typeof value === 'string' && value.trim() === '' ? null : value),
-    z.string().trim().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must use E.164 format, e.g. +919876543210').nullable().optional()
-  ),
 })
 
 export const notificationPrefsSchema = z.object({
   emailInstantAlerts: z.boolean(),
   emailDailyDigest: z.boolean(),
-  smsCriticalAlerts: z.boolean(),
 })
 
 export const systemPrefsSchema = z.object({

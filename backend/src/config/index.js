@@ -46,8 +46,6 @@ const envSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalEnv(z.string().startsWith('AC')),
   TWILIO_AUTH_TOKEN: optionalEnv(z.string().min(1)),
   TWILIO_VERIFY_SERVICE_SID: optionalEnv(z.string().startsWith('VA')),
-  TWILIO_MESSAGING_SERVICE_SID: optionalEnv(z.string().startsWith('MG')),
-  TWILIO_FROM_PHONE: optionalEnv(z.string().regex(/^\+[1-9]\d{7,14}$/)),
   TWILIO_TIMEOUT_MS: z.coerce.number().int().min(1000).default(10000),
   SENDGRID_API_KEY: optionalEnv(z.string().min(1)),
 })

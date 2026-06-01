@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   emailQueue: {
     add: vi.fn(),
   },
-  sendSms: vi.fn(),
   logger: {
     warn: vi.fn(),
     info: vi.fn(),
@@ -41,10 +40,6 @@ vi.mock('../src/queues/email.queue.js', () => ({
   emailQueue: mocks.emailQueue,
 }))
 
-vi.mock('../src/services/sms.service.js', () => ({
-  sendSms: mocks.sendSms,
-}))
-
 vi.mock('../src/utils/logger.js', () => ({
   logger: mocks.logger,
 }))
@@ -56,25 +51,21 @@ describe('admin notification service', () => {
     vi.clearAllMocks()
   })
 
-  it('creates in-app notifications and respects email/SMS opt-ins for high-priority complaints', async () => {
+  it('creates in-app notifications and respects email opt-ins for high-priority complaints', async () => {
     const admins = [
       {
         id: 'admin-1',
         name: 'Email Admin',
         email: 'email@campus.edu',
-        phoneNumber: null,
         emailInstantAlerts: true,
         emailDailyDigest: true,
-        smsCriticalAlerts: false,
       },
       {
         id: 'admin-2',
-        name: 'SMS Admin',
-        email: 'sms@campus.edu',
-        phoneNumber: '+919876543210',
+        name: 'Digest Admin',
+        email: 'digest@campus.edu',
         emailInstantAlerts: false,
         emailDailyDigest: true,
-        smsCriticalAlerts: true,
       },
     ]
 
@@ -91,7 +82,6 @@ describe('admin notification service', () => {
     mocks.findManyUsers.mockResolvedValue(admins)
     mocks.createMany.mockResolvedValue({ count: 2 })
     mocks.emailQueue.add.mockResolvedValue({})
-    mocks.sendSms.mockResolvedValue(true)
 
     await notificationService.notifyHighPriorityComplaint(complaint)
 
@@ -117,10 +107,6 @@ describe('admin notification service', () => {
         to: 'email@campus.edu',
       })
     )
-    expect(mocks.sendSms).toHaveBeenCalledWith({
-      to: '+919876543210',
-      body: expect.stringContaining('Electrical fire near lab'),
-    })
   })
 
   it('does nothing for non-high-priority complaints', async () => {
@@ -133,7 +119,6 @@ describe('admin notification service', () => {
     expect(mocks.findManyUsers).not.toHaveBeenCalled()
     expect(mocks.createMany).not.toHaveBeenCalled()
     expect(mocks.emailQueue.add).not.toHaveBeenCalled()
-    expect(mocks.sendSms).not.toHaveBeenCalled()
   })
 
   it('returns notifications with unread count', async () => {

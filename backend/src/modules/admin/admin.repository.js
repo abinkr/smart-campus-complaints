@@ -174,9 +174,7 @@ export const findUserById = (id) =>
       role: true,
       emailInstantAlerts: true,
       emailDailyDigest: true,
-      smsCriticalAlerts: true,
       isSuperAdmin: true,
-      phoneNumber: true,
     },
   })
 
@@ -193,9 +191,7 @@ export const updateUser = (id, data) =>
       role: true,
       emailInstantAlerts: true,
       emailDailyDigest: true,
-      smsCriticalAlerts: true,
       isSuperAdmin: true,
-      phoneNumber: true,
     },
   })
 

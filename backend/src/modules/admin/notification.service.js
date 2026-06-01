@@ -1,6 +1,5 @@
 import { prisma } from '../../config/prisma.js'
 import { emailQueue } from '../../queues/email.queue.js'
-import { sendSms } from '../../services/sms.service.js'
 import { logger } from '../../utils/logger.js'
 import { NotFoundError } from '../../utils/ApiError.js'
 
@@ -13,10 +12,8 @@ const ADMIN_SELECT = {
   id: true,
   name: true,
   email: true,
-  phoneNumber: true,
   emailInstantAlerts: true,
   emailDailyDigest: true,
-  smsCriticalAlerts: true,
 }
 
 const complaintSummary = (complaint) => ({
@@ -134,25 +131,15 @@ export const notifyHighPriorityComplaint = async (complaint) => {
     skipDuplicates: true,
   })
 
-  const sideEffects = [
-    ...admins
-      .filter(admin => admin.emailInstantAlerts)
-      .map(admin =>
-        emailQueue.add('adminHighPriority', {
-          to: admin.email,
-          adminName: admin.name,
-          complaint: summary,
-        })
-      ),
-    ...admins
-      .filter(admin => admin.smsCriticalAlerts && admin.phoneNumber)
-      .map(admin =>
-        sendSms({
-          to: admin.phoneNumber,
-          body: `Smart Campus urgent complaint: ${complaint.title} (#${complaint.id.slice(0, 8).toUpperCase()})`,
-        })
-      ),
-  ]
+  const sideEffects = admins
+    .filter(admin => admin.emailInstantAlerts)
+    .map(admin =>
+      emailQueue.add('adminHighPriority', {
+        to: admin.email,
+        adminName: admin.name,
+        complaint: summary,
+      })
+    )
 
   const results = await Promise.allSettled(sideEffects)
 

@@ -32,11 +32,9 @@ export default function Settings() {
   const [profileName, setProfileName] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [profileRole, setProfileRole] = useState('');
-  const [profilePhone, setProfilePhone] = useState('');
 
   // Notifications Form State
   const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(false);
   const [dailyDigest, setDailyDigest] = useState(true);
 
   // Security Form State
@@ -60,10 +58,8 @@ export default function Settings() {
           setProfileName(data.profile?.name || '');
           setProfileEmail(data.profile?.email || '');
           setProfileRole(data.profile?.role || '');
-          setProfilePhone(data.profile?.phoneNumber || '');
           setIsSuperAdmin(!!data.profile?.isSuperAdmin);
           setEmailAlerts(!!data.notifications?.emailInstantAlerts);
-          setSmsAlerts(!!data.notifications?.smsCriticalAlerts);
           setDailyDigest(!!data.notifications?.emailDailyDigest);
           const nextTimezone = data.system?.defaultTimezone || systemTimezone;
           setTimezone(nextTimezone);
@@ -91,15 +87,13 @@ export default function Settings() {
     
     try {
       if (activeTab === 'profile') {
-        const result = await updateAdminProfile({ name: profileName, phoneNumber: profilePhone || null });
+        const result = await updateAdminProfile({ name: profileName });
         setProfileName(result.name);
-        setProfilePhone(result.phoneNumber || '');
         setSaveMessage('Profile settings updated successfully.');
       } else if (activeTab === 'notifications') {
         await updateAdminNotifications({
           emailInstantAlerts: emailAlerts,
-          emailDailyDigest: dailyDigest,
-          smsCriticalAlerts: smsAlerts
+          emailDailyDigest: dailyDigest
         });
         setSaveMessage('Notification preferences updated successfully.');
       } else if (activeTab === 'security') {
@@ -231,18 +225,6 @@ export default function Settings() {
                     <p className="mt-1.5 text-xs text-gray-500">Contact IT support to change your institutional email.</p>
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">SMS Phone Number</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={profilePhone}
-                      onChange={(e) => setProfilePhone(e.target.value)}
-                      placeholder="+919876543210"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
-                    />
-                    <p className="mt-1.5 text-xs text-gray-500">Required for Critical Incident SMS alerts. Use country code format.</p>
-                  </div>
-                  <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1.5">Access Role</label>
                     <input
                       type="text"
@@ -292,25 +274,6 @@ export default function Settings() {
                     </div>
                   </div>
                   
-                  <hr className="border-gray-200" />
-                  
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">SMS Notifications</h3>
-                    <label className="flex items-start gap-3 cursor-pointer group">
-                      <div className="flex h-5 items-center">
-                        <input
-                          type="checkbox"
-                          checked={smsAlerts}
-                          onChange={(e) => setSmsAlerts(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-[#0a1422] focus:ring-[#0a1422]"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900">Critical Incident SMS</span>
-                        <span className="text-xs text-gray-500">Get a text message for urgent campus safety or infrastructure failures.</span>
-                      </div>
-                    </label>
-                  </div>
                 </div>
               )}
 

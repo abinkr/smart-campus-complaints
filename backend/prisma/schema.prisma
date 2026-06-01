@@ -27,9 +27,7 @@ model User {
   studentFollowUps    StudentFollowUp[]
   emailInstantAlerts  Boolean           @default(true) @map("email_instant_alerts")
   emailDailyDigest    Boolean           @default(true) @map("email_daily_digest")
-  smsCriticalAlerts   Boolean           @default(false) @map("sms_critical_alerts")
   isSuperAdmin        Boolean           @default(false) @map("is_super_admin")
-  phoneNumber         String?           @map("phone_number") @db.VarChar(30)
   notifications       Notification[]
 
   @@index([email], map: "idx_users_email")

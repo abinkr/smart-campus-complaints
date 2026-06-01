@@ -68,8 +68,6 @@ describe('admin settings controls', () => {
         isSuperAdmin: false,
         emailInstantAlerts: true,
         emailDailyDigest: false,
-        smsCriticalAlerts: true,
-        phoneNumber: '+919876543210',
       }
 
       mocks.findUserById.mockResolvedValue(mockUser)
@@ -85,14 +83,12 @@ describe('admin settings controls', () => {
         profile: {
           name: 'Normal Admin',
           email: 'admin@campus.edu',
-          phoneNumber: '+919876543210',
           role: 'Administrator',
           isSuperAdmin: false,
         },
         notifications: {
           emailInstantAlerts: true,
           emailDailyDigest: false,
-          smsCriticalAlerts: true,
         },
         system: {
           defaultTimezone: 'Europe/London',
@@ -110,8 +106,6 @@ describe('admin settings controls', () => {
         isSuperAdmin: true,
         emailInstantAlerts: true,
         emailDailyDigest: true,
-        smsCriticalAlerts: false,
-        phoneNumber: null,
       }
 
       mocks.findUserById.mockResolvedValue(mockUser)
