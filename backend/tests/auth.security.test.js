@@ -290,8 +290,8 @@ describe('auth security controls', () => {
     expect(
       changePasswordSchema.safeParse({
         currentPassword: 'OldPassword1!',
-        newPassword: 'longpassword1!',
-        confirmPassword: 'longpassword1!',
+        newPassword: 'passwo1!',
+        confirmPassword: 'passwo1!',
       }).success
     ).toBe(true)
   })

@@ -11,7 +11,7 @@ const strongPassword = z
 
 const changedPassword = z
   .string()
-  .min(12, 'New password must be at least 12 characters')
+  .min(8, 'New password must be at least 8 characters')
   .max(128, 'New password must be 128 characters or fewer')
   .regex(/[0-9]/, 'New password must include at least one number')
   .regex(/[^A-Za-z0-9]/, 'New password must include at least one symbol')
