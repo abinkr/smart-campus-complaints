@@ -28,6 +28,22 @@ function validateImage(file) {
   return null;
 }
 
+function AutoClassifiedField({ id, label }) {
+  return (
+    <div>
+      <span id={`${id}-label`} className="label-base">{label}</span>
+      <div
+        id={id}
+        aria-labelledby={`${id}-label`}
+        className="h-[48px] w-full rounded-lg border border-gray-200 bg-gray-50 px-4 text-body-md text-on-surface/75 shadow-sm flex items-center gap-2 overflow-hidden cursor-not-allowed"
+      >
+        <Sparkles size={15} className="text-secondary shrink-0" aria-hidden="true" />
+        <span className="min-w-0 truncate">Will be automatically detected by AI</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ComplaintForm() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -119,25 +135,8 @@ export default function ComplaintForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="label-base" htmlFor="category">Category (Auto-classified)</label>
-              <div className="relative">
-                <select id="category" className="select-base opacity-75 cursor-not-allowed bg-gray-50 border border-gray-200" disabled>
-                  <option>Will be automatically detected by AI</option>
-                </select>
-                <Sparkles size={14} className="absolute right-10 top-1/2 -translate-y-1/2 text-secondary shrink-0" />
-              </div>
-            </div>
-
-            <div>
-              <label className="label-base" htmlFor="priority">Priority Level (Auto-classified)</label>
-              <div className="relative">
-                <select id="priority" className="select-base opacity-75 cursor-not-allowed bg-gray-50 border border-gray-200" disabled>
-                  <option>Will be automatically detected by AI</option>
-                </select>
-                <Sparkles size={14} className="absolute right-10 top-1/2 -translate-y-1/2 text-secondary shrink-0" />
-              </div>
-            </div>
+            <AutoClassifiedField id="category" label="Category (Auto-classified)" />
+            <AutoClassifiedField id="priority" label="Priority Level (Auto-classified)" />
           </div>
 
           <hr className="border-t border-outline-variant border-opacity-40" />
