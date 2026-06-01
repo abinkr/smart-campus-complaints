@@ -71,6 +71,13 @@ export async function updateComplaint(id, payload) {
   return normalizeComplaint(unwrapEnvelope(data));
 }
 
+export async function addInternalNote(id, note) {
+  const { data } = await axiosInstance.post(`/api/admin/complaints/${id}/internal-notes`, {
+    note
+  });
+  return unwrapEnvelope(data);
+}
+
 export async function exportCSV(params = {}) {
   const response = await axiosInstance.get('/api/admin/complaints/export', {
     params: normalizeParams(params),

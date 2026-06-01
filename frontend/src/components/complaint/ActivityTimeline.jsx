@@ -1,7 +1,7 @@
 import StatusBadge from '../ui/StatusBadge';
 import { formatDateTime } from '../../utils/formatDate';
 import { useSystemTimezone } from '../../context/TimezoneContext';
-import { ArrowRight, Clock, User, CheckCircle2, MessageSquare, AlertCircle } from 'lucide-react';
+import { ArrowRight, Clock, User, CheckCircle2, MessageSquare, AlertCircle, ShieldAlert } from 'lucide-react';
 
 function TimelineSkeleton() {
   return (
@@ -50,12 +50,17 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
         const isLast = index === logs.length - 1;
         const isResolved = log.newStatus === 'RESOLVED';
         const isSubmit = !log.oldStatus && log.newStatus === 'OPEN';
+        const isInternal = Boolean(log.isInternal);
 
         let iconColor = 'text-primary';
         let ringColor = 'ring-outline-variant';
         let bgIcon = 'bg-surface-container';
 
-        if (isResolved) {
+        if (isInternal) {
+          iconColor = 'text-amber-600';
+          ringColor = 'ring-amber-200';
+          bgIcon = 'bg-amber-50';
+        } else if (isResolved) {
           iconColor = 'text-tertiary-fixed-dim';
           ringColor = 'ring-tertiary-fixed-dim/30';
           bgIcon = 'bg-tertiary-fixed/10';
@@ -73,7 +78,9 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
                 className={`flex h-8 w-8 items-center justify-center rounded-full ${bgIcon} ${iconColor} ring-4 ${ringColor} transition-transform duration-300 group-hover:scale-105 shrink-0`}
                 aria-hidden="true"
               >
-                {isResolved ? (
+                {isInternal ? (
+                  <ShieldAlert size={16} />
+                ) : isResolved ? (
                   <CheckCircle2 size={16} />
                 ) : log.note ? (
                   <MessageSquare size={16} />
@@ -94,7 +101,11 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
             {/* Timeline Content */}
             <div className={`pb-6 flex-1 min-w-0 ${isLast ? 'pb-2' : ''}`}>
               <div className="flex flex-wrap items-center gap-2">
-                {log.oldStatus ? (
+                {isInternal ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Internal note</span>
+                  </div>
+                ) : log.oldStatus ? (
                   <div className="flex items-center gap-1.5 bg-surface p-1 rounded-lg border border-outline-variant/30 shadow-sm">
                     <StatusBadge status={log.oldStatus} />
                     <ArrowRight size={12} className="text-outline shrink-0" aria-hidden="true" />
@@ -111,7 +122,7 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
               {/* Timestamp and modifier name */}
               <p className="mt-2 text-xs text-on-surface-variant flex items-center gap-1.5">
                 <span className="font-semibold text-primary">{log.admin?.name || log.changedBy || 'System'}</span>
-                <span>•</span>
+                <span aria-hidden="true">-</span>
                 <time dateTime={log.changedAt} className="text-[11px] font-medium text-outline">
                   {formatDateTime(log.changedAt, timezone)}
                 </time>
@@ -119,10 +130,14 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
 
               {/* Status Update Note Text */}
               {log.note && (
-                <div className="mt-3 relative text-sm text-on-surface bg-surface-container-lowest hover:bg-surface transition-colors rounded-xl px-4 py-3 border border-outline-variant/40 shadow-sm leading-relaxed max-w-lg">
+                <div className={`mt-3 relative text-sm text-on-surface transition-colors rounded-xl px-4 py-3 border shadow-sm leading-relaxed max-w-lg ${
+                  isInternal
+                    ? 'bg-amber-50/40 hover:bg-amber-50 border-amber-200'
+                    : 'bg-surface-container-lowest hover:bg-surface border-outline-variant/40'
+                }`}>
                   <div className="absolute top-2.5 right-3 text-[10px] uppercase font-bold text-outline tracking-wider flex items-center gap-1">
-                    <MessageSquare size={10} />
-                    Update Message
+                    {isInternal ? <ShieldAlert size={10} /> : <MessageSquare size={10} />}
+                    {isInternal ? 'Internal Note' : 'Update Message'}
                   </div>
                   <p className="pr-12 text-primary font-medium">{log.note}</p>
                 </div>

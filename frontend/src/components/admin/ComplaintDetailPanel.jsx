@@ -8,6 +8,7 @@ import { useSystemTimezone } from '../../context/TimezoneContext';
 import { useFocusTrap } from '../../utils/useFocusTrap';
 import { formatDate } from '../../utils/formatDate';
 import { getComplaintById } from '../../api/complaintApi';
+import { addInternalNote } from '../../api/adminApi';
 import PriorityBadge from '../ui/PriorityBadge';
 import StatusBadge from '../ui/StatusBadge';
 import ActivityTimeline from '../complaint/ActivityTimeline';
@@ -34,7 +35,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Note Tab selection state: 'public' (maps to adminNote) vs 'internal' (mocked)
+  // Note Tab selection state: public student update vs private admin-only note.
   const [noteTab, setNoteTab] = useState('public');
 
   // Editable form state
@@ -42,7 +43,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
   const [editPriority, setEditPriority] = useState('');
   const [editDepartment, setEditDepartment] = useState('');
   const [adminNote, setAdminNote] = useState('');
-  const [mockInternalNote, setMockInternalNote] = useState('');
+  const [internalNote, setInternalNote] = useState('');
 
   // Sync local state when a new complaint is selected
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
       setEditPriority(complaint.priority);
       setEditDepartment(complaint.department || '');
       setAdminNote(complaint.adminNote || '');
-      setMockInternalNote(''); // reset mock note
+      setInternalNote('');
 
       // Fetch logs and details
       let cancelled = false;
@@ -71,11 +72,15 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
     }
   }, [complaint]);
 
-  const isDirty =
+  const trimmedInternalNote = internalNote.trim();
+  const hasComplaintChanges = Boolean(
     complaint &&
-    (editStatus !== complaint.status ||
-      editDepartment !== (complaint.department || '') ||
-      adminNote !== (complaint.adminNote || ''));
+      (editStatus !== complaint.status ||
+        editDepartment !== (complaint.department || '') ||
+        adminNote !== (complaint.adminNote || ''))
+  );
+  const hasInternalNote = trimmedInternalNote.length > 0;
+  const isDirty = Boolean(complaint && (hasComplaintChanges || hasInternalNote));
 
   async function handleSave(e) {
     e.preventDefault();
@@ -83,12 +88,20 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
 
     setIsSaving(true);
     try {
-      await onSave(complaint.id, {
-        status: editStatus,
-        priority: editPriority, // sent but backend ignores it; preserved for interface contract
-        department: editDepartment,
-        adminNote: adminNote
-      });
+      if (hasInternalNote) {
+        await addInternalNote(complaint.id, trimmedInternalNote);
+      }
+
+      if (hasComplaintChanges) {
+        await onSave(complaint.id, {
+          status: editStatus,
+          priority: editPriority, // sent but backend ignores it; preserved for interface contract
+          department: editDepartment,
+          adminNote: adminNote
+        });
+      } else {
+        onClose();
+      }
     } catch (error) {
       console.error('Failed to save complaint', error);
       setIsSaving(false);
@@ -281,9 +294,6 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                   }`}
                 >
                   Internal Log Note
-                  <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0 scale-90">
-                    Mock
-                  </span>
                 </button>
               </div>
 
@@ -291,7 +301,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               {noteTab === 'public' && (
                 <div className="space-y-1">
                   <span className="block text-[9px] font-bold text-secondary uppercase tracking-wide">
-                    Visible to Student • Shared on Complaint timeline
+                    Visible to Student - Shared on Complaint timeline
                   </span>
                   <textarea
                     id="edit-note"
@@ -305,20 +315,20 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                 </div>
               )}
 
-              {/* Internal Mock Update Area */}
+              {/* Internal Admin Note Area */}
               {noteTab === 'internal' && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 uppercase tracking-wide">
                     <ShieldAlert size={10} />
-                    <span>Private Admin note • Requires backend model schema extension</span>
+                    <span>Private admin note - hidden from students</span>
                   </div>
                   <textarea
                     id="edit-internal-note"
                     rows={3}
-                    placeholder="Add private staff details (e.g. costs, dispatch IDs). Not saved to database in current backend API."
+                    placeholder="Add private staff details, dispatch IDs, vendor notes, or costs. Saved for admins only."
                     className="w-full rounded-xl border border-amber-300 bg-amber-50/20 p-3 text-sm shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 focus:outline-none resize-none"
-                    value={mockInternalNote}
-                    onChange={(e) => setMockInternalNote(e.target.value)}
+                    value={internalNote}
+                    onChange={(e) => setInternalNote(e.target.value)}
                     disabled={isSaving}
                   />
                 </div>
