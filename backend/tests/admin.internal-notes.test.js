@@ -76,6 +76,7 @@ describe('admin internal notes', () => {
         changedBy: note.createdByAdminId,
         oldStatus: complaint.status,
         newStatus: complaint.status,
+        note: note.note,
         isInternal: true,
       })
     )

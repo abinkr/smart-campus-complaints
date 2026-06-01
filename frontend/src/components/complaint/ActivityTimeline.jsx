@@ -23,6 +23,15 @@ function TimelineSkeleton() {
   );
 }
 
+function formatTimelineNote(log, isInternal) {
+  if (!log?.note) return '';
+
+  if (!isInternal) return log.note;
+
+  const match = log.note.match(/^Internal Note added:\s*"([\s\S]*)"$/i);
+  return match ? match[1] : log.note;
+}
+
 export default function ActivityTimeline({ logs = [], isLoading = false }) {
   const { timezone } = useSystemTimezone();
 
@@ -51,6 +60,7 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
         const isResolved = log.newStatus === 'RESOLVED';
         const isSubmit = !log.oldStatus && log.newStatus === 'OPEN';
         const isInternal = Boolean(log.isInternal);
+        const noteText = formatTimelineNote(log, isInternal);
 
         let iconColor = 'text-primary';
         let ringColor = 'ring-outline-variant';
@@ -82,7 +92,7 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
                   <ShieldAlert size={16} />
                 ) : isResolved ? (
                   <CheckCircle2 size={16} />
-                ) : log.note ? (
+                ) : noteText ? (
                   <MessageSquare size={16} />
                 ) : isSubmit ? (
                   <AlertCircle size={16} />
@@ -129,17 +139,19 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
               </p>
 
               {/* Status Update Note Text */}
-              {log.note && (
-                <div className={`mt-3 relative text-sm text-on-surface transition-colors rounded-xl px-4 py-3 border shadow-sm leading-relaxed max-w-lg ${
+              {noteText && (
+                <div className={`mt-3 text-sm text-on-surface transition-colors rounded-xl px-4 py-3 border shadow-sm leading-relaxed max-w-lg ${
                   isInternal
                     ? 'bg-amber-50/40 hover:bg-amber-50 border-amber-200'
                     : 'bg-surface-container-lowest hover:bg-surface border-outline-variant/40'
                 }`}>
-                  <div className="absolute top-2.5 right-3 text-[10px] uppercase font-bold text-outline tracking-wider flex items-center gap-1">
-                    {isInternal ? <ShieldAlert size={10} /> : <MessageSquare size={10} />}
-                    {isInternal ? 'Internal Note' : 'Update Message'}
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] uppercase font-bold tracking-wider text-outline">
+                    <span className="flex items-center gap-1">
+                      {isInternal ? <ShieldAlert size={10} /> : <MessageSquare size={10} />}
+                      {isInternal ? 'Internal Note' : 'Update Message'}
+                    </span>
                   </div>
-                  <p className="pr-12 text-primary font-medium">{log.note}</p>
+                  <p className="text-primary font-medium whitespace-pre-wrap break-words">{noteText}</p>
                 </div>
               )}
             </div>

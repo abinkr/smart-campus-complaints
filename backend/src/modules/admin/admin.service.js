@@ -158,8 +158,6 @@ export const submitInternalNote = async (id, adminId, body) => {
     throw new NotFoundError('Complaint not found')
   }
 
-  const logNote = `Internal Note added: "${body.note.slice(0, 60)}${body.note.length > 60 ? '...' : ''}"`
-
   const intNote = await repo.createInternalNoteAndLog(
     {
       complaintId: id,
@@ -171,7 +169,7 @@ export const submitInternalNote = async (id, adminId, body) => {
       changedBy: adminId,
       oldStatus: complaint.status,
       newStatus: complaint.status,
-      note: logNote,
+      note: body.note,
       isInternal: true,
     }
   )
