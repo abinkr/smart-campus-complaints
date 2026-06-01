@@ -44,6 +44,7 @@ export default function Settings() {
   // System Form State
   const [timezone, setTimezone] = useState('Asia/Kolkata');
   const [retention, setRetention] = useState('3');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Load preferences from API
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function Settings() {
           setProfileName(data.profile?.name || '');
           setProfileEmail(data.profile?.email || '');
           setProfileRole(data.profile?.role || '');
+          setIsSuperAdmin(!!data.profile?.isSuperAdmin);
           setEmailAlerts(!!data.notifications?.emailInstantAlerts);
           setSmsAlerts(!!data.notifications?.smsCriticalAlerts);
           setDailyDigest(!!data.notifications?.emailDailyDigest);
@@ -344,18 +346,35 @@ export default function Settings() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="retention" className="block text-sm font-medium text-gray-700 mb-1.5">Data Retention Policy</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="retention" className="block text-sm font-medium text-gray-700">Data Retention Policy</label>
+                      {!isSuperAdmin && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <Lock size={10} /> Super Admin Only
+                        </span>
+                      )}
+                    </div>
                     <select
                       id="retention"
                       value={retention}
                       onChange={(e) => setRetention(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
+                      disabled={!isSuperAdmin}
+                      className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-[#0a1422] transition-all ${
+                        !isSuperAdmin
+                          ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed select-none'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-[#0a1422]'
+                      }`}
                     >
                       <option value="1">1 Year</option>
                       <option value="3">3 Years</option>
                       <option value="5">5 Years</option>
                       <option value="never">Keep Forever</option>
                     </select>
+                    {!isSuperAdmin && (
+                      <p className="mt-1.5 text-xs text-gray-500">
+                        Data retention changes affect legal and compliance deletion schedules. Contact a Super Administrator to adjust these parameters.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

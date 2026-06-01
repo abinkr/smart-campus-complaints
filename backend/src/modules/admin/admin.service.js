@@ -309,6 +309,7 @@ export const getSettings = async (userId) => {
       name: user.name,
       email: user.email,
       role: user.isSuperAdmin ? 'Super Administrator' : 'Administrator',
+      isSuperAdmin: user.isSuperAdmin,
     },
     notifications: {
       emailInstantAlerts: user.emailInstantAlerts,
@@ -331,6 +332,7 @@ export const updateProfileSettings = async (userId, dto) => {
     name: updated.name,
     email: updated.email,
     role: updated.isSuperAdmin ? 'Super Administrator' : 'Administrator',
+    isSuperAdmin: updated.isSuperAdmin,
   }
 }
 
@@ -355,8 +357,11 @@ export const updateSystemSettings = async (userId, dto) => {
     throw new NotFoundError('Admin user not found')
   }
 
-  if (!user.isSuperAdmin) {
-    throw new ForbiddenError('Only Super Administrators can update system preferences')
+  const currentRetentionRecord = await repo.getSystemPreference('data_retention_years')
+  const currentRetentionPolicy = currentRetentionRecord?.value || '3'
+
+  if (dto.dataRetentionPolicy !== currentRetentionPolicy && !user.isSuperAdmin) {
+    throw new ForbiddenError('Only Super Administrators can update data retention policy')
   }
 
   await Promise.all([
