@@ -17,6 +17,7 @@ import {
   profileUpdateSchema,
   notificationPrefsSchema,
   systemPrefsSchema,
+  notificationIdParamSchema,
 } from './admin.schema.js'
 
 const router = Router()
@@ -80,6 +81,18 @@ router.patch(
 )
 
 router.get('/settings', asyncHandler(controller.loadSettings))
+
+router.get('/notifications', asyncHandler(controller.listNotifications))
+
+router.patch('/notifications/read-all', asyncHandler(controller.markAllNotificationsRead))
+
+router.patch(
+  '/notifications/:id/read',
+  validate({
+    params: notificationIdParamSchema,
+  }),
+  asyncHandler(controller.markNotificationRead)
+)
 
 router.put(
   '/settings/profile',

@@ -29,6 +29,8 @@ model User {
   emailDailyDigest    Boolean           @default(true) @map("email_daily_digest")
   smsCriticalAlerts   Boolean           @default(false) @map("sms_critical_alerts")
   isSuperAdmin        Boolean           @default(false) @map("is_super_admin")
+  phoneNumber         String?           @map("phone_number") @db.VarChar(30)
+  notifications       Notification[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -56,6 +58,7 @@ model Complaint {
   publicUpdates PublicUpdate[]
   internalNotes InternalNote[]
   studentFollowUps StudentFollowUp[]
+  notifications Notification[]
 
   @@index([userId], map: "idx_complaints_user_id")
   @@index([status], map: "idx_complaints_status")
@@ -169,6 +172,24 @@ model Department {
   name String @unique(map: "departments_name_unique") @db.VarChar(100)
 
   @@map("departments")
+}
+
+model Notification {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  complaintId String?    @map("complaint_id") @db.Uuid
+  type        String     @db.VarChar(40)
+  title       String     @db.VarChar(160)
+  message     String
+  readAt      DateTime?  @map("read_at") @db.Timestamptz(6)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade, map: "notifications_user_fk")
+  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull, map: "notifications_complaint_fk")
+
+  @@unique([userId, complaintId, type], map: "notifications_user_complaint_type_unique")
+  @@index([userId, readAt, createdAt(sort: Desc)], map: "idx_notifications_user_read_created")
+  @@index([complaintId], map: "idx_notifications_complaint_id")
+  @@map("notifications")
 }
 
 enum Role {

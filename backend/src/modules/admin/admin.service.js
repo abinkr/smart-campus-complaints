@@ -308,6 +308,7 @@ export const getSettings = async (userId) => {
     profile: {
       name: user.name,
       email: user.email,
+      phoneNumber: user.phoneNumber,
       role: user.isSuperAdmin ? 'Super Administrator' : 'Administrator',
       isSuperAdmin: user.isSuperAdmin,
     },
@@ -326,11 +327,13 @@ export const getSettings = async (userId) => {
 export const updateProfileSettings = async (userId, dto) => {
   const updated = await repo.updateUser(userId, {
     name: dto.name,
+    phoneNumber: dto.phoneNumber ?? null,
   })
 
   return {
     name: updated.name,
     email: updated.email,
+    phoneNumber: updated.phoneNumber,
     role: updated.isSuperAdmin ? 'Super Administrator' : 'Administrator',
     isSuperAdmin: updated.isSuperAdmin,
   }

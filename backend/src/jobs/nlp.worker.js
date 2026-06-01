@@ -6,6 +6,7 @@ import { config } from '../config/index.js'
 import { logger } from '../utils/logger.js'
 import { emailQueue } from '../queues/email.queue.js'
 import { invalidateCachePattern } from '../utils/cache.js'
+import { notifyHighPriorityComplaint } from '../modules/admin/notification.service.js'
 
 const PRIORITY_MAP = {
   high: 'HIGH',
@@ -79,6 +80,7 @@ export const nlpWorker = new Worker(
           },
         }
       ),
+      notifyHighPriorityComplaint(updated),
       invalidateCachePattern('analytics:*'),
       invalidateCachePattern(`complaints:user:${updated.userId}:*`),
       invalidateCachePattern('admin:complaints:*'),

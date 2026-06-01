@@ -60,6 +60,10 @@ export const patchPrioritySchema = z.object({
 
 export const profileUpdateSchema = z.object({
   name: z.string().trim().min(2).max(100),
+  phoneNumber: z.preprocess(
+    value => (typeof value === 'string' && value.trim() === '' ? null : value),
+    z.string().trim().regex(/^\+[1-9]\d{7,14}$/, 'Phone number must use E.164 format, e.g. +919876543210').nullable().optional()
+  ),
 })
 
 export const notificationPrefsSchema = z.object({
@@ -71,4 +75,8 @@ export const notificationPrefsSchema = z.object({
 export const systemPrefsSchema = z.object({
   defaultTimezone: z.enum(['America/New_York', 'Europe/London', 'Asia/Kolkata']),
   dataRetentionPolicy: z.enum(['1', '3', '5', 'never']),
+})
+
+export const notificationIdParamSchema = z.object({
+  id: z.string().uuid(),
 })

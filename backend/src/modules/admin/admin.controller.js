@@ -1,4 +1,5 @@
 import * as adminService from './admin.service.js'
+import * as notificationService from './notification.service.js'
 import { ApiResponse } from '../../utils/ApiResponse.js'
 
 export const getAll = async (req, res) => {
@@ -62,4 +63,19 @@ export const saveNotificationSettings = async (req, res) => {
 export const saveSystemSettings = async (req, res) => {
   const system = await adminService.updateSystemSettings(req.user.id, req.body)
   return ApiResponse.ok(res, system, 'System preferences updated')
+}
+
+export const listNotifications = async (req, res) => {
+  const result = await notificationService.listNotifications(req.user.id, req.query)
+  return ApiResponse.ok(res, result, 'Notifications loaded')
+}
+
+export const markNotificationRead = async (req, res) => {
+  const notification = await notificationService.markNotificationRead(req.user.id, req.params.id)
+  return ApiResponse.ok(res, notification, 'Notification marked as read')
+}
+
+export const markAllNotificationsRead = async (req, res) => {
+  const result = await notificationService.markAllNotificationsRead(req.user.id)
+  return ApiResponse.ok(res, result, 'Notifications marked as read')
 }

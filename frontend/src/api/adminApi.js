@@ -135,3 +135,22 @@ export async function updateAdminSystem(payload) {
   const { data } = await axiosInstance.put('/api/admin/settings/system', payload);
   return unwrapEnvelope(data);
 }
+
+export async function getAdminNotifications(limit = 10) {
+  const { data } = await axiosInstance.get('/api/admin/notifications', {
+    params: {
+      limit
+    }
+  });
+  return unwrapEnvelope(data);
+}
+
+export async function markAdminNotificationRead(id) {
+  const { data } = await axiosInstance.patch(`/api/admin/notifications/${id}/read`);
+  return unwrapEnvelope(data);
+}
+
+export async function markAllAdminNotificationsRead() {
+  const { data } = await axiosInstance.patch('/api/admin/notifications/read-all');
+  return unwrapEnvelope(data);
+}

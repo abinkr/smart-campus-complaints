@@ -7,7 +7,8 @@ import { redis, redisSubscriber } from './config/redis.js'
 import { emailWorker } from './jobs/email.worker.js'
 import { nlpWorker } from './jobs/nlp.worker.js'
 import { cleanupWorker } from './jobs/cleanup.worker.js'
-import { closeQueues, scheduleCleanupJobs } from './queues/index.js'
+import { notificationWorker } from './jobs/notification.worker.js'
+import { closeQueues, scheduleCleanupJobs, scheduleNotificationJobs } from './queues/index.js'
 
 const app = createApp()
 
@@ -25,6 +26,10 @@ scheduleCleanupJobs().catch((err) => {
   logger.warn({ err }, 'Failed to schedule cleanup jobs')
 })
 
+scheduleNotificationJobs().catch((err) => {
+  logger.warn({ err }, 'Failed to schedule notification jobs')
+})
+
 const shutdown = async (signal) => {
   logger.info({ signal }, 'Shutdown signal received')
 
@@ -35,6 +40,7 @@ const shutdown = async (signal) => {
       emailWorker.close(),
       nlpWorker.close(),
       cleanupWorker.close(),
+      notificationWorker.close(),
       closeQueues(),
       prisma.$disconnect(),
       redis.quit(),

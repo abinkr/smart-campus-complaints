@@ -59,6 +59,41 @@ const TEMPLATES = {
       <p>Track your complaint for future status updates.</p>
     `,
   }),
+
+  adminHighPriority: (data) => ({
+    subject: `High Priority Complaint - #${data.complaint.id.slice(0, 8).toUpperCase()}`,
+    html: `
+      <h2>High-priority complaint needs review.</h2>
+      <p>Hi ${escapeHtml(data.adminName || 'Admin')},</p>
+      <p><strong>Title:</strong> ${escapeHtml(data.complaint.title)}</p>
+      <p><strong>Category:</strong> ${escapeHtml(data.complaint.category ?? 'Pending')}</p>
+      <p><strong>Priority:</strong> ${escapeHtml(data.complaint.priority)}</p>
+      <p><strong>Status:</strong> ${escapeHtml(data.complaint.status)}</p>
+      <p>Please open the admin portal and review this complaint.</p>
+    `,
+  }),
+
+  adminDailyDigest: (data) => {
+    const newItems = (data.newComplaints || [])
+      .map(item => `<li>${escapeHtml(item.title)} - ${escapeHtml(item.priority ?? 'N/A')} - ${escapeHtml(item.status)}</li>`)
+      .join('')
+
+    const resolvedItems = (data.resolvedComplaints || [])
+      .map(item => `<li>${escapeHtml(item.title)} - ${escapeHtml(item.department ?? 'Unassigned')}</li>`)
+      .join('')
+
+    return {
+      subject: 'Smart Campus Daily Complaint Digest',
+      html: `
+        <h2>Daily Complaint Digest</h2>
+        <p>Hi ${escapeHtml(data.adminName || 'Admin')},</p>
+        <p><strong>New complaints:</strong> ${(data.newComplaints || []).length}</p>
+        <p><strong>Resolved complaints:</strong> ${(data.resolvedComplaints || []).length}</p>
+        ${newItems ? `<h3>New complaints</h3><ul>${newItems}</ul>` : ''}
+        ${resolvedItems ? `<h3>Resolved complaints</h3><ul>${resolvedItems}</ul>` : ''}
+      `,
+    }
+  },
 }
 
 export const emailWorker = new Worker(
