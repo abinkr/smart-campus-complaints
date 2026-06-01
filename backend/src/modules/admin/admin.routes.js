@@ -9,6 +9,11 @@ import {
   adminComplaintQuerySchema,
   adminExportQuerySchema,
   updateComplaintSchema,
+  publicUpdateSchema,
+  internalNoteSchema,
+  patchStatusSchema,
+  patchAssignmentSchema,
+  patchPrioritySchema,
 } from './admin.schema.js'
 
 const router = Router()
@@ -24,6 +29,51 @@ router.put(
     body: updateComplaintSchema,
   }),
   asyncHandler(controller.update)
+)
+
+router.post(
+  '/complaints/:id/public-updates',
+  validate({
+    params: adminComplaintIdParamSchema,
+    body: publicUpdateSchema,
+  }),
+  asyncHandler(controller.addPublicUpdate)
+)
+
+router.post(
+  '/complaints/:id/internal-notes',
+  validate({
+    params: adminComplaintIdParamSchema,
+    body: internalNoteSchema,
+  }),
+  asyncHandler(controller.addInternalNote)
+)
+
+router.patch(
+  '/complaints/:id/status',
+  validate({
+    params: adminComplaintIdParamSchema,
+    body: patchStatusSchema,
+  }),
+  asyncHandler(controller.updateStatus)
+)
+
+router.patch(
+  '/complaints/:id/assignment',
+  validate({
+    params: adminComplaintIdParamSchema,
+    body: patchAssignmentSchema,
+  }),
+  asyncHandler(controller.updateAssignment)
+)
+
+router.patch(
+  '/complaints/:id/priority',
+  validate({
+    params: adminComplaintIdParamSchema,
+    body: patchPrioritySchema,
+  }),
+  asyncHandler(controller.updatePriority)
 )
 
 export default router

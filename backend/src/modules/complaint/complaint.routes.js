@@ -9,6 +9,7 @@ import {
   complaintIdParamSchema,
   complaintListQuerySchema,
   submitComplaintSchema,
+  submitFollowUpSchema,
 } from './complaint.schema.js'
 
 const router = Router()
@@ -43,6 +44,16 @@ router.get(
   authenticate,
   validate({ params: complaintIdParamSchema }),
   asyncHandler(controller.getOne)
+)
+
+router.post(
+  '/:id/follow-ups',
+  authenticate,
+  validate({
+    params: complaintIdParamSchema,
+    body: submitFollowUpSchema,
+  }),
+  asyncHandler(controller.sendFollowUp)
 )
 
 export default router

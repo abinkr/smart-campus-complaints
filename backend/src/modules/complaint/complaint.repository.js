@@ -118,6 +118,45 @@ export const findComplaintById = (id) =>
         },
         take: 50,
       },
+      publicUpdates: {
+        include: {
+          admin: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
+      internalNotes: {
+        include: {
+          admin: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
+      studentFollowUps: {
+        include: {
+          student: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
     },
   })
 
@@ -181,3 +220,24 @@ export const createComplaintLog = (data) =>
   prisma.complaintLog.create({
     data,
   })
+
+export const createFollowUpAndLog = async (followUpData, logData) => {
+  const [followUp] = await prisma.$transaction([
+    prisma.studentFollowUp.create({
+      data: followUpData,
+    }),
+    prisma.complaint.update({
+      where: {
+        id: followUpData.complaintId,
+      },
+      data: {
+        status: 'OPEN',
+      },
+    }),
+    prisma.complaintLog.create({
+      data: logData,
+    }),
+  ])
+
+  return followUp
+}

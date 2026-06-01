@@ -19,3 +19,8 @@ export const getOne = async (req, res) => {
   const complaint = await complaintService.getComplaintById(req.params.id, req.user)
   return ApiResponse.ok(res, complaint)
 }
+
+export const sendFollowUp = async (req, res) => {
+  const followUp = await complaintService.submitFollowUp(req.params.id, req.user.id, req.body)
+  return ApiResponse.created(res, followUp, 'Follow-up submitted')
+}

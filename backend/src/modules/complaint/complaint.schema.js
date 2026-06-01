@@ -18,3 +18,7 @@ export const submitComplaintSchema = z.object({
 export const complaintListQuerySchema = paginationSchema.extend({
   status: statusSchema.optional(),
 })
+
+export const submitFollowUpSchema = z.object({
+  message: z.string().trim().min(3).max(2000),
+})

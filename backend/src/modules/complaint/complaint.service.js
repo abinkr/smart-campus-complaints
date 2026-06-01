@@ -13,6 +13,12 @@ const PRIORITY_MAP = {
   low: 'LOW',
 }
 
+const STATUS_EXPLANATIONS = {
+  open: "Your concern has been logged and is awaiting administrative triage.",
+  in_progress: "Our team is actively investigating the concern and coordinating resolution.",
+  resolved: "The concern has been addressed and marked as resolved. You can review the details below."
+}
+
 const nlpRequestOptions = () => ({
   timeout: config.NLP_TIMEOUT_MS,
   headers: {
@@ -66,6 +72,7 @@ export const submitComplaint = async (userId, body, file) => {
     oldStatus: null,
     newStatus: 'OPEN',
     note: 'Complaint submitted',
+    isInternal: false,
   })
 
   nlpQueue.add(
@@ -113,5 +120,102 @@ export const getComplaintById = async (id, requestingUser) => {
     throw new ForbiddenError('Access denied')
   }
 
-  return complaint
+  const statusMeaning = STATUS_EXPLANATIONS[complaint.status.toLowerCase()] || STATUS_EXPLANATIONS.open
+
+  if (isAdmin) {
+    return {
+      ...complaint,
+      statusMeaning,
+      student: complaint.user,
+      publicUpdates: complaint.publicUpdates,
+      internalNotes: complaint.internalNotes,
+      studentFollowUps: complaint.studentFollowUps,
+      timeline: complaint.logs,
+      logs: complaint.logs,
+      complaint: {
+        id: complaint.id,
+        userId: complaint.userId,
+        title: complaint.title,
+        description: complaint.description,
+        imageUrl: complaint.imageUrl,
+        category: complaint.category,
+        priority: complaint.priority,
+        nlpConfidence: complaint.nlpConfidence,
+        status: complaint.status,
+        department: complaint.department,
+        adminNote: complaint.adminNote,
+        createdAt: complaint.createdAt,
+        updatedAt: complaint.updatedAt,
+        resolvedAt: complaint.resolvedAt,
+        statusMeaning,
+      }
+    }
+  }
+
+  const safeLogs = complaint.logs.filter(l => !l.isInternal)
+  return {
+    ...complaint,
+    statusMeaning,
+    logs: safeLogs,
+    timeline: safeLogs,
+    publicUpdates: complaint.publicUpdates,
+    studentFollowUps: complaint.studentFollowUps,
+    internalNotes: [],
+    complaint: {
+      id: complaint.id,
+      userId: complaint.userId,
+      title: complaint.title,
+      description: complaint.description,
+      imageUrl: complaint.imageUrl,
+      category: complaint.category,
+      priority: complaint.priority,
+      nlpConfidence: complaint.nlpConfidence,
+      status: complaint.status,
+      department: complaint.department,
+      adminNote: complaint.adminNote,
+      createdAt: complaint.createdAt,
+      updatedAt: complaint.updatedAt,
+      resolvedAt: complaint.resolvedAt,
+      statusMeaning,
+    }
+  }
+}
+
+export const submitFollowUp = async (complaintId, studentId, body) => {
+  const complaint = await repo.findComplaintById(complaintId)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  if (complaint.userId !== studentId) {
+    throw new ForbiddenError('Access denied')
+  }
+
+  const oldStatus = complaint.status
+  const logNote = `Student follow-up: "${body.message.slice(0, 60)}${body.message.length > 60 ? '...' : ''}"`
+
+  const followUp = await repo.createFollowUpAndLog(
+    {
+      complaintId,
+      studentId,
+      message: body.message,
+    },
+    {
+      complaintId,
+      changedBy: studentId,
+      oldStatus,
+      newStatus: 'OPEN',
+      note: logNote,
+      isInternal: false,
+    }
+  )
+
+  Promise.allSettled([
+    invalidateCachePattern(`complaints:user:${studentId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+    invalidateCachePattern('analytics:*'),
+  ])
+
+  return followUp
 }

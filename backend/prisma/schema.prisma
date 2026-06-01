@@ -9,19 +9,22 @@ datasource db {
 }
 
 model User {
-  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                String         @db.VarChar(100)
-  email               String         @unique(map: "users_email_unique") @db.VarChar(255)
-  password            String         @db.VarChar(255)
-  role                Role           @default(STUDENT)
-  department          String?        @db.VarChar(100)
-  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  loginFailedAttempts Int            @default(0) @map("login_failed_attempts")
-  lockedUntil         DateTime?      @map("locked_until") @db.Timestamptz(6)
-  logs                ComplaintLog[] @relation("AdminLogs")
-  complaints          Complaint[]    @relation("UserComplaints")
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String            @db.VarChar(100)
+  email               String            @unique(map: "users_email_unique") @db.VarChar(255)
+  password            String            @db.VarChar(255)
+  role                Role              @default(STUDENT)
+  department          String?           @db.VarChar(100)
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  loginFailedAttempts Int               @default(0) @map("login_failed_attempts")
+  lockedUntil         DateTime?         @map("locked_until") @db.Timestamptz(6)
+  logs                ComplaintLog[]    @relation("AdminLogs")
+  complaints          Complaint[]       @relation("UserComplaints")
   mfaChallenges       MfaChallenge[]
   refreshTokens       RefreshToken[]
+  publicUpdates       PublicUpdate[]
+  internalNotes       InternalNote[]
+  studentFollowUps    StudentFollowUp[]
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -30,22 +33,25 @@ model User {
 }
 
 model Complaint {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String         @map("user_id") @db.Uuid
-  title         String         @db.VarChar(200)
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  title         String            @db.VarChar(200)
   description   String
-  imageUrl      String?        @map("image_url") @db.VarChar(500)
-  category      String?        @db.VarChar(50)
+  imageUrl      String?           @map("image_url") @db.VarChar(500)
+  category      String?           @db.VarChar(50)
   priority      Priority?
-  nlpConfidence Decimal?       @map("nlp_confidence") @db.Decimal(5, 2)
-  status        Status         @default(OPEN)
-  department    String?        @db.VarChar(100)
-  adminNote     String?        @map("admin_note")
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  resolvedAt    DateTime?      @map("resolved_at") @db.Timestamptz(6)
+  nlpConfidence Decimal?          @map("nlp_confidence") @db.Decimal(5, 2)
+  status        Status            @default(OPEN)
+  department    String?           @db.VarChar(100)
+  adminNote     String?           @map("admin_note")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  resolvedAt    DateTime?         @map("resolved_at") @db.Timestamptz(6)
   logs          ComplaintLog[]
-  user          User           @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade, map: "complaints_user_fk")
+  user          User              @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade, map: "complaints_user_fk")
+  publicUpdates PublicUpdate[]
+  internalNotes InternalNote[]
+  studentFollowUps StudentFollowUp[]
 
   @@index([userId], map: "idx_complaints_user_id")
   @@index([status], map: "idx_complaints_status")
@@ -65,6 +71,7 @@ model ComplaintLog {
   newStatus   String?   @map("new_status") @db.VarChar(30)
   note        String?
   changedAt   DateTime  @default(now()) @map("changed_at") @db.Timestamptz(6)
+  isInternal  Boolean   @default(false) @map("is_internal")
   admin       User?     @relation("AdminLogs", fields: [changedBy], references: [id], map: "logs_admin_fk")
   complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "logs_complaint_fk")
 
@@ -72,6 +79,45 @@ model ComplaintLog {
   @@index([changedBy], map: "idx_logs_changed_by")
   @@index([changedAt(sort: Desc)], map: "idx_logs_changed_at")
   @@map("complaint_logs")
+}
+
+model PublicUpdate {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  complaintId      String    @map("complaint_id") @db.Uuid
+  message          String
+  createdByAdminId String    @map("created_by_admin_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  complaint        Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "public_updates_complaint_fk")
+  admin            User      @relation(fields: [createdByAdminId], references: [id], onDelete: Cascade, map: "public_updates_admin_fk")
+
+  @@index([complaintId], map: "idx_public_updates_complaint_id")
+  @@map("public_updates")
+}
+
+model InternalNote {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  complaintId      String    @map("complaint_id") @db.Uuid
+  note             String
+  createdByAdminId String    @map("created_by_admin_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  complaint        Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "internal_notes_complaint_fk")
+  admin            User      @relation(fields: [createdByAdminId], references: [id], onDelete: Cascade, map: "internal_notes_admin_fk")
+
+  @@index([complaintId], map: "idx_internal_notes_complaint_id")
+  @@map("internal_notes")
+}
+
+model StudentFollowUp {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  complaintId String    @map("complaint_id") @db.Uuid
+  message     String
+  studentId   String    @map("student_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade, map: "student_follow_ups_complaint_fk")
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "student_follow_ups_student_fk")
+
+  @@index([complaintId], map: "idx_student_follow_ups_complaint_id")
+  @@map("student_follow_ups")
 }
 
 model RefreshToken {

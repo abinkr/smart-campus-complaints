@@ -127,3 +127,37 @@ export const findComplaintsForExport = (filters) =>
       },
     },
   })
+
+export const createPublicUpdateAndLog = async (updateData, logData) => {
+  const [pubUpdate] = await prisma.$transaction([
+    prisma.publicUpdate.create({
+      data: updateData,
+    }),
+    prisma.complaint.update({
+      where: {
+        id: updateData.complaintId,
+      },
+      data: {
+        adminNote: updateData.message,
+      },
+    }),
+    prisma.complaintLog.create({
+      data: logData,
+    }),
+  ])
+
+  return pubUpdate
+}
+
+export const createInternalNoteAndLog = async (noteData, logData) => {
+  const [intNote] = await prisma.$transaction([
+    prisma.internalNote.create({
+      data: noteData,
+    }),
+    prisma.complaintLog.create({
+      data: logData,
+    }),
+  ])
+
+  return intNote
+}

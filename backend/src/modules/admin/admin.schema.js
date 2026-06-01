@@ -37,3 +37,23 @@ export const updateComplaintSchema = z.object({
   department: value.department,
   adminNote: value.adminNote ?? value.admin_note ?? null,
 }))
+
+export const publicUpdateSchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+})
+
+export const internalNoteSchema = z.object({
+  note: z.string().trim().min(1).max(2000),
+})
+
+export const patchStatusSchema = z.object({
+  status: statusSchema,
+})
+
+export const patchAssignmentSchema = z.object({
+  department: z.string().trim().min(1).max(100).nullable().optional(),
+})
+
+export const patchPrioritySchema = z.object({
+  priority: prioritySchema,
+})

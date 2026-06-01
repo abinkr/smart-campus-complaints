@@ -1,5 +1,5 @@
 import * as repo from './admin.repository.js'
-import { NotFoundError } from '../../utils/ApiError.js'
+import { NotFoundError, BadRequestError } from '../../utils/ApiError.js'
 import { withCache, invalidateCachePattern } from '../../utils/cache.js'
 import { emailQueue } from '../../queues/email.queue.js'
 import { logger } from '../../utils/logger.js'
@@ -12,6 +12,20 @@ const cacheKeyForList = (filters, pagination) =>
     limit: pagination.limit,
   })}`
 
+const VALID_TRANSITIONS = {
+  OPEN: ['IN_PROGRESS', 'RESOLVED'],
+  IN_PROGRESS: ['OPEN', 'RESOLVED'],
+  RESOLVED: ['OPEN', 'IN_PROGRESS'],
+}
+
+const validateStatusTransition = (oldStatus, newStatus) => {
+  if (oldStatus === newStatus) return
+  const allowed = VALID_TRANSITIONS[oldStatus] || []
+  if (!allowed.includes(newStatus)) {
+    throw new BadRequestError(`Invalid status transition from ${oldStatus} to ${newStatus}`)
+  }
+}
+
 export const getAllComplaints = (filters, pagination) =>
   withCache(cacheKeyForList(filters, pagination), 30, () => repo.findComplaints(filters, pagination))
 
@@ -23,6 +37,7 @@ export const updateComplaint = async (id, adminId, dto) => {
   }
 
   const oldStatus = complaint.status
+  validateStatusTransition(oldStatus, dto.status)
 
   const updateData = {
     status: dto.status,
@@ -36,7 +51,8 @@ export const updateComplaint = async (id, adminId, dto) => {
     changedBy: adminId,
     oldStatus,
     newStatus: dto.status,
-    note: dto.adminNote ?? null,
+    note: dto.adminNote ?? 'Complaint updated by admin',
+    isInternal: false,
   })
 
   Promise.allSettled([
@@ -99,4 +115,181 @@ export const exportComplaints = async (filters, res) => {
     'Created At',
     'Resolved At',
   ])
+}
+
+export const submitPublicUpdate = async (id, adminId, body) => {
+  const complaint = await repo.findComplaintForUpdate(id)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  const logNote = `Public update: "${body.message.slice(0, 60)}${body.message.length > 60 ? '...' : ''}"`
+
+  const pubUpdate = await repo.createPublicUpdateAndLog(
+    {
+      complaintId: id,
+      message: body.message,
+      createdByAdminId: adminId,
+    },
+    {
+      complaintId: id,
+      changedBy: adminId,
+      oldStatus: complaint.status,
+      newStatus: complaint.status,
+      note: body.message,
+      isInternal: false,
+    }
+  )
+
+  Promise.allSettled([
+    invalidateCachePattern('analytics:*'),
+    invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+  ])
+
+  return pubUpdate
+}
+
+export const submitInternalNote = async (id, adminId, body) => {
+  const complaint = await repo.findComplaintForUpdate(id)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  const logNote = `Internal Note added: "${body.note.slice(0, 60)}${body.note.length > 60 ? '...' : ''}"`
+
+  const intNote = await repo.createInternalNoteAndLog(
+    {
+      complaintId: id,
+      note: body.note,
+      createdByAdminId: adminId,
+    },
+    {
+      complaintId: id,
+      changedBy: adminId,
+      oldStatus: complaint.status,
+      newStatus: complaint.status,
+      note: logNote,
+      isInternal: true,
+    }
+  )
+
+  Promise.allSettled([
+    invalidateCachePattern('analytics:*'),
+    invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+  ])
+
+  return intNote
+}
+
+export const patchStatus = async (id, adminId, body) => {
+  const complaint = await repo.findComplaintForUpdate(id)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  const oldStatus = complaint.status
+  validateStatusTransition(oldStatus, body.status)
+
+  const updateData = {
+    status: body.status,
+    resolvedAt: body.status === 'RESOLVED' ? complaint.resolvedAt ?? new Date() : null,
+  }
+
+  const updated = await repo.updateComplaintAndLog(id, updateData, {
+    complaintId: id,
+    changedBy: adminId,
+    oldStatus,
+    newStatus: body.status,
+    note: `Status updated to ${body.status}`,
+    isInternal: false,
+  })
+
+  Promise.allSettled([
+    emailQueue.add(
+      'statusUpdate',
+      {
+        to: complaint.user.email,
+        complaint: updated,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+      }
+    ),
+    invalidateCachePattern('analytics:*'),
+    invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+  ])
+
+  return updated
+}
+
+export const patchAssignment = async (id, adminId, body) => {
+  const complaint = await repo.findComplaintForUpdate(id)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  const updateData = {
+    department: body.department ?? null,
+  }
+
+  const logNote = body.department
+    ? `Assigned to ${body.department} department`
+    : 'Removed department assignment'
+
+  const updated = await repo.updateComplaintAndLog(id, updateData, {
+    complaintId: id,
+    changedBy: adminId,
+    oldStatus: complaint.status,
+    newStatus: complaint.status,
+    note: logNote,
+    isInternal: false,
+  })
+
+  Promise.allSettled([
+    invalidateCachePattern('analytics:*'),
+    invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+  ])
+
+  return updated
+}
+
+export const patchPriority = async (id, adminId, body) => {
+  const complaint = await repo.findComplaintForUpdate(id)
+
+  if (!complaint) {
+    throw new NotFoundError('Complaint not found')
+  }
+
+  const updateData = {
+    priority: body.priority,
+  }
+
+  const updated = await repo.updateComplaintAndLog(id, updateData, {
+    complaintId: id,
+    changedBy: adminId,
+    oldStatus: complaint.status,
+    newStatus: complaint.status,
+    note: `Priority changed to ${body.priority}`,
+    isInternal: false,
+  })
+
+  Promise.allSettled([
+    invalidateCachePattern('analytics:*'),
+    invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
+    invalidateCachePattern('admin:complaints:*'),
+  ])
+
+  return updated
 }

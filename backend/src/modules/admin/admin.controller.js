@@ -18,3 +18,28 @@ export const update = async (req, res) => {
 }
 
 export const exportCSV = async (req, res) => adminService.exportComplaints(req.query, res)
+
+export const addPublicUpdate = async (req, res) => {
+  const result = await adminService.submitPublicUpdate(req.params.id, req.user.id, req.body)
+  return ApiResponse.created(res, result, 'Public update sent')
+}
+
+export const addInternalNote = async (req, res) => {
+  const result = await adminService.submitInternalNote(req.params.id, req.user.id, req.body)
+  return ApiResponse.created(res, result, 'Internal note saved')
+}
+
+export const updateStatus = async (req, res) => {
+  const result = await adminService.patchStatus(req.params.id, req.user.id, req.body)
+  return ApiResponse.ok(res, result, 'Status updated')
+}
+
+export const updateAssignment = async (req, res) => {
+  const result = await adminService.patchAssignment(req.params.id, req.user.id, req.body)
+  return ApiResponse.ok(res, result, 'Assignment updated')
+}
+
+export const updatePriority = async (req, res) => {
+  const result = await adminService.patchPriority(req.params.id, req.user.id, req.body)
+  return ApiResponse.ok(res, result, 'Priority updated')
+}
