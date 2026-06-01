@@ -1,20 +1,15 @@
 // src/components/admin/ComplaintDetailPanel.jsx
 // Slide-over panel (desktop) / full-screen modal (mobile) for viewing
-// and updating a specific complaint.
-//
-// Props:
-//   complaint — the complaint object to view (if null, panel is closed)
-//   onClose   — function called to close the panel
-//   onSave    — function(id, changes) called to update the complaint
+// and updating a specific complaint from the admin portal.
 
 import { useEffect, useRef, useState } from 'react';
-import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { X, Image as ImageIcon, Loader2, Sparkles, MessageSquare, ShieldAlert } from 'lucide-react';
 import { useFocusTrap } from '../../utils/useFocusTrap';
 import { formatDate } from '../../utils/formatDate';
 import { getComplaintById } from '../../api/complaintApi';
 import PriorityBadge from '../ui/PriorityBadge';
 import StatusBadge from '../ui/StatusBadge';
-import ComplaintTimeline from './ComplaintTimeline';
+import ActivityTimeline from '../complaint/ActivityTimeline';
 
 const DEPARTMENTS = [
   'Maintenance',
@@ -25,20 +20,11 @@ const DEPARTMENTS = [
   'Administration'
 ];
 
-/**
- * ComplaintDetailPanel
- *
- * @param {{
- *   complaint: Object | null,
- *   onClose: () => void,
- *   onSave: (id: string, payload: Object) => Promise<void>
- * }} props
- */
 export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
   const panelRef = useRef(null);
   const isOpen = complaint !== null;
 
-  // Use the reusable focus trap hook to manage accessibility
+  // Manage accessibility focus trapping
   useFocusTrap(panelRef, isOpen, onClose);
 
   // --- Local State ---
@@ -46,13 +32,16 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Note Tab selection state: 'public' (maps to adminNote) vs 'internal' (mocked)
+  const [noteTab, setNoteTab] = useState('public');
+
   // Editable form state
   const [editStatus, setEditStatus] = useState('');
   const [editPriority, setEditPriority] = useState('');
   const [editDepartment, setEditDepartment] = useState('');
   const [adminNote, setAdminNote] = useState('');
+  const [mockInternalNote, setMockInternalNote] = useState('');
 
-  // --- Effects ---
   // Sync local state when a new complaint is selected
   useEffect(() => {
     if (complaint) {
@@ -60,8 +49,9 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
       setEditPriority(complaint.priority);
       setEditDepartment(complaint.department || '');
       setAdminNote(complaint.adminNote || '');
+      setMockInternalNote(''); // reset mock note
 
-      // Fetch logs
+      // Fetch logs and details
       let cancelled = false;
       setIsLoadingLogs(true);
       getComplaintById(complaint.id).then((res) => {
@@ -79,11 +69,9 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
     }
   }, [complaint]);
 
-  // --- Handlers ---
   const isDirty =
     complaint &&
     (editStatus !== complaint.status ||
-      editPriority !== complaint.priority ||
       editDepartment !== (complaint.department || '') ||
       adminNote !== (complaint.adminNote || ''));
 
@@ -95,22 +83,22 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
     try {
       await onSave(complaint.id, {
         status: editStatus,
-        priority: editPriority,
+        priority: editPriority, // sent but backend ignores it; preserved for interface contract
         department: editDepartment,
         adminNote: adminNote
       });
-      // The onSave function in parent will trigger re-fetch and close the panel.
     } catch (error) {
       console.error('Failed to save complaint', error);
-      setIsSaving(false); // only reset on error; on success, panel closes
+      setIsSaving(false);
     }
   }
 
-  // --- Render logic ---
-  // If closed, return null. But wait for animation? We use simple conditional render here.
-  // Tailwind slide-over animations usually require a transition library (Headless UI) or
-  // complex state. For this mock, we'll use a direct conditional render with a quick fade-in.
   if (!isOpen) return null;
+
+  // Format AI confidence percentage
+  const confidencePercent = complaint.nlpConfidence
+    ? `${(Number(complaint.nlpConfidence) * 100).toFixed(0)}%`
+    : null;
 
   return (
     <>
@@ -132,17 +120,17 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
           <div>
-            <h2 id="panel-title" className="text-lg font-semibold text-gray-900 leading-tight">
-              Complaint Details
+            <h2 id="panel-title" className="text-lg font-bold text-gray-900 leading-tight">
+              Review Ticket
             </h2>
-            <p className="text-xs font-mono text-gray-500 mt-0.5">
+            <p className="text-xs font-mono text-gray-400 mt-0.5 uppercase tracking-wide">
               ID: {complaint.id}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a1422]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a1422]"
             aria-label="Close detail panel"
           >
             <X size={20} aria-hidden="true" />
@@ -150,164 +138,205 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-5 flex flex-col gap-8">
+        <div className="flex-1 overflow-y-auto bg-surface-container-low/10">
+          <div className="px-6 py-6 flex flex-col gap-6">
             
-            {/* ---- 1. Primary Info ---- */}
-            <section aria-label="Complaint Summary">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+            {/* ---- 1. Primary Status Header Info ---- */}
+            <section aria-label="Complaint Summary" className="bg-white rounded-2xl border border-outline-variant/60 p-5 shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={complaint.status} />
                 <PriorityBadge priority={complaint.priority} />
-                <span className="text-xs font-medium text-gray-500 px-2 py-0.5 bg-gray-100 rounded-md">
+                <span className="text-xs font-bold text-outline px-2.5 py-1 bg-surface-container-low border border-outline-variant/30 rounded-lg capitalize">
                   {complaint.category}
                 </span>
+                {confidencePercent && (
+                  <span className="text-[10px] font-bold text-secondary bg-secondary/5 border border-secondary/10 px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 ml-auto">
+                    <Sparkles size={11} />
+                    AI: {confidencePercent}
+                  </span>
+                )}
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {complaint.title}
-              </h3>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-                {complaint.description}
-              </p>
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                  {complaint.title}
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                  {complaint.description}
+                </p>
+              </div>
 
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-outline-variant/30 text-xs">
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
-                    Submitted By
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
+                    LODGED BY STUDENT
                   </span>
-                  <span className="font-medium text-gray-900">{complaint.user?.name}</span>
-                  <span className="block text-gray-500">{complaint.user?.email}</span>
+                  <span className="font-semibold text-gray-900 block">{complaint.user?.name}</span>
+                  <span className="text-gray-500 block">{complaint.user?.email}</span>
                 </div>
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
-                    Date
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
+                    SUBMISSION DATE
                   </span>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-semibold text-gray-900 block">
                     {formatDate(complaint.createdAt)}
                   </span>
                 </div>
               </div>
             </section>
 
-            {/* ---- 2. Optional Image ---- */}
+            {/* ---- 2. Optional Image Attachment ---- */}
             {complaint.imageUrl && (
-              <section aria-label="Attached Image">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                  Attachment
+              <section aria-label="Attached Image Evidence" className="bg-white rounded-2xl border border-outline-variant/60 p-5 shadow-sm">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">
+                  Supporting Photo Attachment
                 </span>
-                <div className="relative h-48 w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 group cursor-pointer">
+                <div className="relative h-44 w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 group cursor-pointer flex justify-center">
                   <img
                     src={complaint.imageUrl}
-                    alt="Complaint attachment"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    alt="Evidence file"
+                    className="h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                   />
-                  {/* Note: In a full app, clicking might open a lightbox. We leave it simple here. */}
                 </div>
               </section>
             )}
 
-            {/* ---- 3. Timeline ---- */}
-            <section aria-label="Status History">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">
-                Activity Timeline
+            {/* ---- 3. Timeline / Logs ---- */}
+            <section aria-label="Status History" className="bg-white rounded-2xl border border-outline-variant/60 p-5 shadow-sm space-y-4">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Action Log Timeline
               </span>
-              <ComplaintTimeline logs={logs} isLoading={isLoadingLogs} />
+              <ActivityTimeline logs={logs} isLoading={isLoadingLogs} />
             </section>
 
           </div>
         </div>
 
-        {/* Footer: Admin Controls Form */}
-        <div className="shrink-0 border-t border-[#e5e7eb] bg-gray-50 px-6 py-5">
+        {/* Footer: Admin Triage Action Panel */}
+        <div className="shrink-0 border-t border-[#e5e7eb] bg-gray-50 px-6 py-5 shadow-[0_-4px_16px_rgba(0,0,0,0.02)]">
           <form onSubmit={handleSave} className="space-y-4">
             
             <div className="grid grid-cols-2 gap-4">
               {/* Status Select */}
               <div>
-                <label htmlFor="edit-status" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-                  Update Status
+                <label htmlFor="edit-status" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                  Triage Status
                 </label>
                 <select
                   id="edit-status"
-                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
+                  className="h-10 w-full rounded-xl border border-gray-300 bg-white px-3 py-0 text-sm shadow-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none"
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
                   disabled={isSaving}
                 >
-                  <option value="OPEN">Open</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="RESOLVED">Resolved</option>
+                  <option value="OPEN">Open (Pending)</option>
+                  <option value="IN_PROGRESS">In Progress (Review)</option>
+                  <option value="RESOLVED">Resolved (Completed)</option>
                 </select>
               </div>
 
-              {/* Priority Select */}
+              {/* Department Select */}
               <div>
-                <label htmlFor="edit-priority" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-                  Priority
+                <label htmlFor="edit-department" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                  Resolving Department
                 </label>
                 <select
-                  id="edit-priority"
-                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
-                  value={editPriority}
-                  onChange={(e) => setEditPriority(e.target.value)}
+                  id="edit-department"
+                  className="h-10 w-full rounded-xl border border-gray-300 bg-white px-3 py-0 text-sm shadow-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none"
+                  value={editDepartment}
+                  onChange={(e) => setEditDepartment(e.target.value)}
                   disabled={isSaving}
                 >
-                  <option value="HIGH">High</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="LOW">Low</option>
+                  <option value="">Unassigned</option>
+                  {DEPARTMENTS.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Department Select */}
-            <div>
-              <label htmlFor="edit-department" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-                Assign Department
-              </label>
-              <select
-                id="edit-department"
-                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
-                value={editDepartment}
-                onChange={(e) => setEditDepartment(e.target.value)}
-                disabled={isSaving}
-              >
-                <option value="">Unassigned</option>
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
+            {/* Note Tab Navigation (Public Reply vs Private note) */}
+            <div className="space-y-2">
+              <div className="flex border-b border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setNoteTab('public')}
+                  className={`py-1.5 px-4 text-xs font-semibold border-b-2 focus:outline-none transition-colors ${
+                    noteTab === 'public'
+                      ? 'border-secondary text-secondary'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Public Update Response
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNoteTab('internal')}
+                  className={`py-1.5 px-4 text-xs font-semibold border-b-2 focus:outline-none transition-colors flex items-center gap-1.5 ${
+                    noteTab === 'internal'
+                      ? 'border-secondary text-secondary'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Internal Log Note
+                  <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0 scale-90">
+                    Mock
+                  </span>
+                </button>
+              </div>
+
+              {/* Public Update Area */}
+              {noteTab === 'public' && (
+                <div className="space-y-1">
+                  <span className="block text-[9px] font-bold text-secondary uppercase tracking-wide">
+                    Visible to Student • Shared on Complaint timeline
+                  </span>
+                  <textarea
+                    id="edit-note"
+                    rows={3}
+                    placeholder="Write a message explaining actions taken or resolution instructions..."
+                    className="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm shadow-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none resize-none"
+                    value={adminNote}
+                    onChange={(e) => setAdminNote(e.target.value)}
+                    disabled={isSaving}
+                  />
+                </div>
+              )}
+
+              {/* Internal Mock Update Area */}
+              {noteTab === 'internal' && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 uppercase tracking-wide">
+                    <ShieldAlert size={10} />
+                    <span>Private Admin note • Requires backend model schema extension</span>
+                  </div>
+                  <textarea
+                    id="edit-internal-note"
+                    rows={3}
+                    placeholder="Add private staff details (e.g. costs, dispatch IDs). Not saved to database in current backend API."
+                    className="w-full rounded-xl border border-amber-300 bg-amber-50/20 p-3 text-sm shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 focus:outline-none resize-none"
+                    value={mockInternalNote}
+                    onChange={(e) => setMockInternalNote(e.target.value)}
+                    disabled={isSaving}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Admin Note Textarea */}
-            <div>
-              <label htmlFor="edit-note" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-                Internal Note / Action Taken
-              </label>
-              <textarea
-                id="edit-note"
-                rows={3}
-                placeholder="Add notes about actions taken or resolutions..."
-                className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] resize-none"
-                value={adminNote}
-                onChange={(e) => setAdminNote(e.target.value)}
-                disabled={isSaving}
-              />
-            </div>
-
-            {/* Actions */}
+            {/* Actions Footer */}
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSaving}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0a1422] disabled:opacity-50"
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!isDirty || isSaving}
-                className="inline-flex items-center justify-center min-w-[120px] rounded-lg bg-[#0a1422] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0a1422] focus:ring-offset-2 disabled:opacity-50 disabled:bg-gray-400"
+                className="inline-flex items-center justify-center min-w-[130px] rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none disabled:opacity-50 disabled:bg-gray-400 transition-colors cursor-pointer"
               >
                 {isSaving ? (
                   <>

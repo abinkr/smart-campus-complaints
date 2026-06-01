@@ -8,6 +8,8 @@ import { useAuth } from '../../hooks/useAuth';
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Queries for metrics and recent complaints list
   const recentQuery = useMyComplaints({ page: 1, limit: 6 });
   const resolvedQuery = useMyComplaints({ status: 'resolved', page: 1, limit: 1 });
   const pendingQuery = useMyComplaints({ status: 'open', page: 1, limit: 1 });
@@ -21,96 +23,126 @@ export default function StudentDashboard() {
   const resolved = resolvedQuery.data?.pagination?.total || 0;
   const pending = pendingQuery.data?.pagination?.total || 0;
 
-  // Display name: use name if available, fall back to email prefix
+  // Deriving display name
   const displayName = user?.name || user?.email?.split('@')[0] || 'Student';
 
   return (
-    <div className="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col">
+    <div className="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col antialiased">
       <Navbar />
 
       <main className="flex-grow w-full max-w-container-max mx-auto px-gutter py-margin-desktop space-y-section-gap">
-        {/* Header & Action Area */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div>
-            <p className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">
-              Student Portal
+        {/* Welcome and quick action banner */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-gradient-to-r from-primary to-primary/95 text-white rounded-2xl p-8 shadow-md relative overflow-hidden group">
+          <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+          <div className="relative z-10 space-y-2">
+            <p className="font-label-md text-label-md text-on-secondary-fixed uppercase tracking-widest font-semibold">
+              Student Hub
             </p>
-            <h1 className="font-display-lg text-display-lg text-primary leading-tight">
+            <h1 className="font-display-lg text-display-lg leading-tight font-bold">
               Welcome back, {displayName}
             </h1>
+            <p className="font-body-lg text-body-lg text-secondary-fixed-dim/90 max-w-xl">
+              Report campus concerns, track resolution timelines, and verify AI classification details in real-time.
+            </p>
           </div>
           <button
             onClick={() => navigate('/submit')}
-            className="bg-primary-container text-on-primary font-label-md text-label-md rounded px-[24px] py-[12px] flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+            className="relative z-10 bg-secondary text-white hover:bg-secondary-container hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 font-semibold rounded-xl px-6 py-3.5 flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Submit New Complaint
           </button>
         </header>
 
-        {/* Metric Cards Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+        {/* Metrics Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter" aria-label="Complaints summary statistics">
           {/* Card: Total */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-[24px] flex flex-col justify-between h-[140px] hover:shadow-sm transition-shadow duration-300 group">
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-[150px] hover:shadow-md hover:border-outline transition-all duration-300 group">
             <div className="flex justify-between items-start">
-              <span className="font-body-md text-body-md text-on-surface-variant font-medium">
-                Total Complaints
-              </span>
-              <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">folder_copy</span>
+              <div className="space-y-1">
+                <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
+                  Total Submissions
+                </span>
+                <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
+                  All filed tickets
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <span className="material-symbols-outlined text-[22px]">folder_copy</span>
               </div>
             </div>
             <div>
-              <h2 className="font-display-lg text-display-lg text-primary leading-none">
+              <h2 className="font-display-lg text-display-lg text-primary leading-none font-bold">
                 {total}
               </h2>
             </div>
           </div>
 
           {/* Card: Pending */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-[24px] flex flex-col justify-between h-[140px] hover:shadow-sm transition-shadow duration-300 group">
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-[150px] hover:shadow-md hover:border-outline transition-all duration-300 group">
             <div className="flex justify-between items-start">
-              <span className="font-body-md text-body-md text-on-surface-variant font-medium">
-                Pending Review
-              </span>
-              <div className="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">pending_actions</span>
+              <div className="space-y-1">
+                <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
+                  Under Triage
+                </span>
+                <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
+                  Awaiting review
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <span className="material-symbols-outlined text-[22px]">pending_actions</span>
               </div>
             </div>
             <div>
-              <h2 className="font-display-lg text-display-lg text-primary leading-none">
+              <h2 className="font-display-lg text-display-lg text-primary leading-none font-bold">
                 {pending}
               </h2>
             </div>
           </div>
 
           {/* Card: Resolved */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-[24px] flex flex-col justify-between h-[140px] hover:shadow-sm transition-shadow duration-300 group">
+          <div className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-[150px] hover:shadow-md hover:border-outline transition-all duration-300 group">
             <div className="flex justify-between items-start">
-              <span className="font-body-md text-body-md text-on-surface-variant font-medium">
-                Resolved Cases
-              </span>
-              <div className="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">check_circle</span>
+              <div className="space-y-1">
+                <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
+                  Resolved Cases
+                </span>
+                <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
+                  Successfully addressed
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <span className="material-symbols-outlined text-[22px]">check_circle</span>
               </div>
             </div>
             <div>
-              <h2 className="font-display-lg text-display-lg text-primary leading-none">
+              <h2 className="font-display-lg text-display-lg text-primary leading-none font-bold">
                 {resolved}
               </h2>
             </div>
           </div>
         </section>
 
-        {/* Recent Complaints */}
+        {/* Recent Complaints Section */}
         <section className="space-y-6">
-          <h2 className="font-headline-md text-headline-md text-primary font-bold">Recent Complaints</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="font-headline-md text-headline-md text-primary font-bold">Recent Complaints</h2>
+            {complaints.length > 0 && (
+              <button
+                onClick={() => navigate('/history')}
+                className="text-secondary font-label-md text-label-md font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                View History <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
+            )}
+          </div>
+
           {complaints.length === 0 ? (
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-[48px] md:p-[80px] flex flex-col items-center justify-center text-center">
-              <div className="w-24 h-24 rounded-full bg-surface-container mb-6 flex items-center justify-center">
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-[48px] md:p-[80px] flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="w-20 h-20 rounded-full bg-surface-container mb-6 flex items-center justify-center text-outline">
                 <span
-                  className="material-symbols-outlined text-[40px] text-on-surface-variant"
-                  style={{ fontVariationSettings: '"wght" 200' }}
+                  className="material-symbols-outlined text-[36px]"
+                  style={{ fontVariationSettings: '"wght" 300' }}
                 >
                   inbox
                 </span>
@@ -118,15 +150,14 @@ export default function StudentDashboard() {
               <h3 className="font-headline-sm text-headline-sm text-primary mb-2 font-bold">
                 No active complaints
               </h3>
-              <p className="font-body-md text-body-md text-on-surface-variant max-w-md mx-auto mb-8">
-                You currently do not have any active or historical complaints in the system. When
-                you submit a new case, it will appear here for tracking.
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mx-auto mb-6">
+                You have not filed any complaints yet. When you submit a concern, it will be listed here for live tracking.
               </p>
               <button
                 onClick={() => navigate('/submit')}
-                className="bg-transparent border border-outline text-on-surface-variant font-label-md text-label-md rounded px-[24px] py-[12px] hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
+                className="bg-transparent border border-outline text-primary hover:bg-surface-container-low font-semibold rounded-xl px-6 py-3 transition-colors duration-200 cursor-pointer text-sm"
               >
-                File a Complaint
+                File Your First Complaint
               </button>
             </div>
           ) : (
@@ -137,4 +168,3 @@ export default function StudentDashboard() {
     </div>
   );
 }
-

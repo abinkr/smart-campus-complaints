@@ -25,7 +25,7 @@ import MetricCard from '../../components/ui/MetricCard';
 import ChartCard from '../../components/ui/ChartCard';
 import RecentActivityFeed from '../../components/admin/RecentActivityFeed';
 
-// Standard colors for the pie chart
+// Harmonious brand colors for status categories
 const PIE_COLORS = {
   Open: '#ef4444',          // red-500
   'In Progress': '#f59e0b', // amber-500
@@ -86,10 +86,10 @@ export default function AdminDashboard() {
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
       
       {/* Page Header */}
-      <div>
+      <div className="space-y-1">
         <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Monitor campus complaints, resolution progress, and department workload.
+        <p className="text-sm text-gray-500">
+          Monitor campus complaints, resolution metrics, and automated triage trends.
         </p>
       </div>
 
@@ -106,8 +106,6 @@ export default function AdminDashboard() {
           value={isLoading ? '...' : sum.pending}
           icon={AlertCircle}
           tone="amber"
-          change={!isLoading ? "+2 since yesterday" : undefined}
-          changeType="negative"
         />
         <MetricCard
           label="Resolved Cases"
@@ -120,8 +118,6 @@ export default function AdminDashboard() {
           value={isLoading ? '...' : sum.avgResolutionTime}
           icon={Clock3}
           tone="indigo"
-          change={!isLoading ? "Faster by 12%" : undefined}
-          changeType="positive"
         />
       </div>
 
@@ -131,11 +127,11 @@ export default function AdminDashboard() {
         {/* Bar Chart — Category */}
         <ChartCard
           title="Complaints by Category"
-          description="Distribution of issues across campus departments"
-          className="lg:col-span-2"
+          description="Distribution of issues across campus categories"
+          className="lg:col-span-2 bg-white rounded-2xl border border-outline-variant/60 shadow-sm"
         >
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+            <div className="flex h-full items-center justify-center text-sm text-gray-400 min-h-[260px]">Loading chart data...</div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={catData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -143,10 +139,10 @@ export default function AdminDashboard() {
                 <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
                 <Tooltip
-                  cursor={{ fill: '#f3f4f6' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  cursor={{ fill: '#f8f9fa' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}
                 />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="count" fill="#0058be" radius={[6, 6, 0, 0]} barSize={36} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -156,32 +152,44 @@ export default function AdminDashboard() {
         <ChartCard
           title="Status Breakdown"
           description="Current resolution stage of all complaints"
+          className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm"
         >
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+            <div className="flex h-full items-center justify-center text-sm text-gray-400 min-h-[260px]">Loading status breakdown...</div>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie
-                  data={statData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {statData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[entry.name] || '#9ca3af'} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#111827', fontWeight: 500 }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex flex-col items-center justify-center">
+              <ResponsiveContainer width="100%" height={210}>
+                <PieChart>
+                  <Pie
+                    data={statData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {statData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[entry.name] || '#9ca3af'} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}
+                    itemStyle={{ color: '#111827', fontWeight: 600 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Custom Legend */}
+              <div className="flex justify-center gap-4 text-xs mt-3">
+                {statData.map((entry) => (
+                  <div key={entry.name} className="flex items-center gap-1.5 font-medium text-gray-600">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[entry.name] }} />
+                    <span>{entry.name}: {entry.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </ChartCard>
       </div>
@@ -190,11 +198,11 @@ export default function AdminDashboard() {
         {/* Line Chart — Trend */}
         <ChartCard
           title="Monthly Complaint Trend"
-          description="New complaints submitted over the last 6 months"
-          className="lg:col-span-2"
+          description="Total new complaints logged over the past 6 months"
+          className="lg:col-span-2 bg-white rounded-2xl border border-outline-variant/60 shadow-sm"
         >
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
+            <div className="flex h-full items-center justify-center text-sm text-gray-400 min-h-[260px]">Loading trend history...</div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -202,15 +210,16 @@ export default function AdminDashboard() {
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}
                 />
                 <Line
                   type="monotone"
                   dataKey="count"
+                  name="Complaints"
                   stroke="#0a1422"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#0a1422', strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: '#3b82f6', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#0058be', strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>

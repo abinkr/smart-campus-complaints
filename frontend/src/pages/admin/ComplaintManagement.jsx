@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getAllComplaints, updateComplaint, exportCSV } from '../../api/adminApi';
-import { Download } from 'lucide-react';
+import { Download, ListFilter } from 'lucide-react';
 
 import ComplaintFilters from '../../components/admin/ComplaintFilters';
 import ComplaintTable from '../../components/admin/ComplaintTable';
@@ -57,7 +57,7 @@ export default function ComplaintManagement() {
     }
     
     searchDebounceRef.current = setTimeout(() => {
-      const cancel = loadComplaints();
+      loadComplaints();
     }, 300);
 
     return () => {
@@ -89,16 +89,15 @@ export default function ComplaintManagement() {
     exportCSV(filters);
   }
 
-  // --- Render ---
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Complaints</h1>
+          <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Complaint Database</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage, filter, and update student complaints.
+            View details, assign resolving departments, and review automatically triaged priorities.
           </p>
         </div>
         
@@ -107,22 +106,30 @@ export default function ComplaintManagement() {
           type="button"
           onClick={handleExportCsv}
           disabled={isLoading || data.complaints.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0a1422] disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a1422] disabled:opacity-50 transition-all cursor-pointer"
         >
           <Download size={16} aria-hidden="true" />
-          Export CSV
+          Export Dataset
         </button>
       </div>
 
       {/* Filters Area */}
-      <ComplaintFilters
-        filters={filters}
-        setFilters={setFilters}
-        isLoading={isLoading}
-      />
+      <div className="bg-white rounded-2xl border border-outline-variant/60 shadow-sm p-4 relative">
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 text-xs font-bold text-[#0a1422] uppercase tracking-wider mb-2">
+          <ListFilter size={14} />
+          <span>Filters & Search</span>
+        </div>
+        <div className="pt-6">
+          <ComplaintFilters
+            filters={filters}
+            setFilters={setFilters}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
 
       {/* Main Table Area */}
-      <div className="flex flex-col space-y-2">
+      <div className="flex flex-col space-y-3 bg-white rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden p-4">
         <ComplaintTable
           complaints={data.complaints}
           isLoading={isLoading}
