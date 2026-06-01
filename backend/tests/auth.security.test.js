@@ -69,6 +69,7 @@ vi.mock('../src/modules/auth/token.service.js', () => ({
 }))
 
 const authService = await import('../src/modules/auth/auth.service.js')
+const { changePasswordSchema } = await import('../src/modules/auth/auth.schema.js')
 
 describe('auth security controls', () => {
   beforeEach(() => {
@@ -259,5 +260,99 @@ describe('auth security controls', () => {
 
     expect(mocks.prisma.user.update).not.toHaveBeenCalled()
     expect(mocks.createMfaChallenge).not.toHaveBeenCalled()
+  })
+
+  it('validates password changes against the visible security policy', () => {
+    expect(
+      changePasswordSchema.safeParse({
+        currentPassword: 'OldPassword1!',
+        newPassword: 'short1!',
+        confirmPassword: 'short1!',
+      }).success
+    ).toBe(false)
+
+    expect(
+      changePasswordSchema.safeParse({
+        currentPassword: 'OldPassword1!',
+        newPassword: 'longpassword!',
+        confirmPassword: 'longpassword!',
+      }).success
+    ).toBe(false)
+
+    expect(
+      changePasswordSchema.safeParse({
+        currentPassword: 'OldPassword1!',
+        newPassword: 'longpassword1',
+        confirmPassword: 'longpassword1',
+      }).success
+    ).toBe(false)
+
+    expect(
+      changePasswordSchema.safeParse({
+        currentPassword: 'OldPassword1!',
+        newPassword: 'longpassword1!',
+        confirmPassword: 'longpassword1!',
+      }).success
+    ).toBe(true)
+  })
+
+  it('rejects password changes when the current password is incorrect', async () => {
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      password: '$2b$12$old-hash',
+    })
+    mocks.compare.mockResolvedValue(false)
+
+    await expect(
+      authService.changePassword('user-1', {
+        currentPassword: 'WrongPassword1!',
+        newPassword: 'newpassword1!',
+        confirmPassword: 'newpassword1!',
+      })
+    ).rejects.toMatchObject({
+      statusCode: 401,
+      message: 'Current password is incorrect',
+    })
+
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled()
+    expect(mocks.revokeAllUserTokens).not.toHaveBeenCalled()
+    expect(mocks.blacklistAccessToken).not.toHaveBeenCalled()
+  })
+
+  it('changes the password and revokes all sessions', async () => {
+    mocks.prisma.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      password: '$2b$12$old-hash',
+    })
+    mocks.compare.mockResolvedValue(true)
+    mocks.hash.mockResolvedValue('$2b$12$new-hash')
+    mocks.prisma.user.update.mockResolvedValue({
+      id: 'user-1',
+    })
+
+    await authService.changePassword(
+      'user-1',
+      {
+        currentPassword: 'OldPassword1!',
+        newPassword: 'newpassword1!',
+        confirmPassword: 'newpassword1!',
+      },
+      {
+        accessToken: 'active-access-token',
+      }
+    )
+
+    expect(mocks.compare).toHaveBeenCalledWith('OldPassword1!', '$2b$12$old-hash')
+    expect(mocks.hash).toHaveBeenCalledWith('newpassword1!', 12)
+    expect(mocks.prisma.user.update).toHaveBeenCalledWith({
+      where: {
+        id: 'user-1',
+      },
+      data: {
+        password: '$2b$12$new-hash',
+      },
+    })
+    expect(mocks.revokeAllUserTokens).toHaveBeenCalledWith('user-1')
+    expect(mocks.blacklistAccessToken).toHaveBeenCalledWith('active-access-token', '15m')
   })
 })

@@ -52,6 +52,11 @@ export async function logoutUser() {
   return unwrapEnvelope(data);
 }
 
+export async function changePassword(payload) {
+  const { data } = await axiosInstance.patch('/api/auth/password', payload);
+  return unwrapEnvelope(data);
+}
+
 export async function refreshUserSession() {
   const { data } = await axiosInstance.post('/api/auth/refresh', null, {
     skipAuthRefresh: true

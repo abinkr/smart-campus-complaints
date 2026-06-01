@@ -9,6 +9,13 @@ const strongPassword = z
   .regex(/[0-9]/, 'Must contain at least one number')
   .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character')
 
+const changedPassword = z
+  .string()
+  .min(12, 'New password must be at least 12 characters')
+  .max(128, 'New password must be 128 characters or fewer')
+  .regex(/[0-9]/, 'New password must include at least one number')
+  .regex(/[^A-Za-z0-9]/, 'New password must include at least one symbol')
+
 const baseRegisterSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().toLowerCase(),
@@ -33,13 +40,10 @@ export const verifyMfaSchema = z.object({
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: strongPassword,
-  confirmPassword: z.string().min(1).optional(),
+  newPassword: changedPassword,
+  confirmPassword: z.string().min(1),
 }).refine((data) => {
-  if (data.confirmPassword && data.newPassword !== data.confirmPassword) {
-    return false
-  }
-  return true
+  return data.newPassword === data.confirmPassword
 }, {
   message: "New password and confirmation password do not match",
   path: ["confirmPassword"],

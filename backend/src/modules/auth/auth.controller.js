@@ -57,7 +57,9 @@ export const logout = async (req, res) => {
 export const me = async (req, res) => ApiResponse.ok(res, req.user)
 
 export const changePassword = async (req, res) => {
-  await authService.changePassword(req.user.id, req.body)
+  await authService.changePassword(req.user.id, req.body, {
+    accessToken: req.token,
+  })
   clearRefreshTokenCookie(res)
   return ApiResponse.ok(res, null, 'Password changed. Please login again.')
 }

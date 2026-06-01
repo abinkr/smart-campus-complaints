@@ -8,7 +8,7 @@ import { Bell, Lock, Settings as SettingsIcon, User, Save, Loader2 } from 'lucid
 import { useAuth } from '../../hooks/useAuth';
 import { useSystemTimezone } from '../../context/TimezoneContext';
 import { getAdminSettings, updateAdminProfile, updateAdminNotifications, updateAdminSystem } from '../../api/adminApi';
-import axiosInstance from '../../api/axiosInstance';
+import { changePassword } from '../../api/authApi';
 
 const TABS = [
   { id: 'profile', label: 'Admin Profile', icon: User },
@@ -16,6 +16,13 @@ const TABS = [
   { id: 'security', label: 'Security', icon: Lock },
   { id: 'system', label: 'System Preferences', icon: SettingsIcon },
 ];
+
+const validateNewPassword = (password) => {
+  if (password.length < 12) return 'New password must be at least 12 characters.';
+  if (!/[0-9]/.test(password)) return 'New password must include at least one number.';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'New password must include at least one symbol.';
+  return '';
+};
 
 export default function Settings() {
   const { logout } = useAuth();
@@ -97,13 +104,17 @@ export default function Settings() {
         });
         setSaveMessage('Notification preferences updated successfully.');
       } else if (activeTab === 'security') {
-        if (!currentPassword || !newPassword) {
-          throw new Error('Please fill in both current and new password fields.');
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          throw new Error('Please fill in all password fields.');
+        }
+        const passwordError = validateNewPassword(newPassword);
+        if (passwordError) {
+          throw new Error(passwordError);
         }
         if (newPassword !== confirmPassword) {
           throw new Error('New passwords do not match.');
         }
-        await axiosInstance.patch('/api/auth/password', {
+        await changePassword({
           currentPassword,
           newPassword,
           confirmPassword
@@ -287,6 +298,8 @@ export default function Settings() {
                       id="currentPassword"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
+                      autoComplete="current-password"
+                      required
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>
@@ -297,6 +310,8 @@ export default function Settings() {
                       id="newPassword"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
+                      required
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                     <p className="mt-1.5 text-xs text-gray-500">Must be at least 12 characters and include a number and symbol.</p>
@@ -308,6 +323,8 @@ export default function Settings() {
                       id="confirmPassword"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                      required
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>

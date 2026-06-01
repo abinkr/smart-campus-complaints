@@ -203,7 +203,7 @@ export const logoutUser = async (token, userId) => {
   ])
 }
 
-export const changePassword = async (userId, dto) => {
+export const changePassword = async (userId, dto, { accessToken } = {}) => {
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -236,6 +236,7 @@ export const changePassword = async (userId, dto) => {
       },
     }),
     revokeAllUserTokens(userId),
+    accessToken ? blacklistAccessToken(accessToken, config.JWT_ACCESS_EXPIRY) : Promise.resolve(),
   ])
 
   logger.info({ userId }, 'User password changed and sessions revoked')
