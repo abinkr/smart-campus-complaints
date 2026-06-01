@@ -115,3 +115,23 @@ export async function getDepartmentPerformanceAnalytics() {
     averageResolutionHours: Number(((item.avgDays || 0) * 24).toFixed(2))
   }));
 }
+
+export async function getAdminSettings() {
+  const { data } = await axiosInstance.get('/api/admin/settings');
+  return unwrapEnvelope(data);
+}
+
+export async function updateAdminProfile(payload) {
+  const { data } = await axiosInstance.put('/api/admin/settings/profile', payload);
+  return unwrapEnvelope(data);
+}
+
+export async function updateAdminNotifications(payload) {
+  const { data } = await axiosInstance.put('/api/admin/settings/notifications', payload);
+  return unwrapEnvelope(data);
+}
+
+export async function updateAdminSystem(payload) {
+  const { data } = await axiosInstance.put('/api/admin/settings/system', payload);
+  return unwrapEnvelope(data);
+}

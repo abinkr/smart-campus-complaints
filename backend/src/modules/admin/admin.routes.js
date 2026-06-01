@@ -14,6 +14,9 @@ import {
   patchStatusSchema,
   patchAssignmentSchema,
   patchPrioritySchema,
+  profileUpdateSchema,
+  notificationPrefsSchema,
+  systemPrefsSchema,
 } from './admin.schema.js'
 
 const router = Router()
@@ -74,6 +77,32 @@ router.patch(
     body: patchPrioritySchema,
   }),
   asyncHandler(controller.updatePriority)
+)
+
+router.get('/settings', asyncHandler(controller.loadSettings))
+
+router.put(
+  '/settings/profile',
+  validate({
+    body: profileUpdateSchema,
+  }),
+  asyncHandler(controller.saveProfileSettings)
+)
+
+router.put(
+  '/settings/notifications',
+  validate({
+    body: notificationPrefsSchema,
+  }),
+  asyncHandler(controller.saveNotificationSettings)
+)
+
+router.put(
+  '/settings/system',
+  validate({
+    body: systemPrefsSchema,
+  }),
+  asyncHandler(controller.saveSystemSettings)
 )
 
 export default router

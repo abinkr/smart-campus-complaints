@@ -57,3 +57,18 @@ export const patchAssignmentSchema = z.object({
 export const patchPrioritySchema = z.object({
   priority: prioritySchema,
 })
+
+export const profileUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+})
+
+export const notificationPrefsSchema = z.object({
+  emailInstantAlerts: z.boolean(),
+  emailDailyDigest: z.boolean(),
+  smsCriticalAlerts: z.boolean(),
+})
+
+export const systemPrefsSchema = z.object({
+  defaultTimezone: z.enum(['America/New_York', 'Europe/London', 'Asia/Kolkata']),
+  dataRetentionPolicy: z.enum(['1', '3', '5', 'never']),
+})

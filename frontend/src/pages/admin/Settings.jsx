@@ -1,11 +1,13 @@
 // src/pages/admin/Settings.jsx
 // Admin Settings page.
 // Features a left-hand navigation tab system (Profile, Notifications, Security, System)
-// and mock-saves preferences with a smooth loading state.
+// and persists preferences to the backend API.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Lock, Settings as SettingsIcon, User, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { getAdminSettings, updateAdminProfile, updateAdminNotifications, updateAdminSystem } from '../../api/adminApi';
+import axiosInstance from '../../api/axiosInstance';
 
 const TABS = [
   { id: 'profile', label: 'Admin Profile', icon: User },
@@ -15,31 +17,126 @@ const TABS = [
 ];
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   
-  // Mock form state
+  // States
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Example state for toggles (Notifications)
+  // Profile Form State
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileRole, setProfileRole] = useState('');
+
+  // Notifications Form State
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
   const [dailyDigest, setDailyDigest] = useState(true);
+
+  // Security Form State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // System Form State
+  const [timezone, setTimezone] = useState('Asia/Kolkata');
+  const [retention, setRetention] = useState('3');
+
+  // Load preferences from API
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        setIsLoading(true);
+        const data = await getAdminSettings();
+        if (active) {
+          setProfileName(data.profile?.name || '');
+          setProfileEmail(data.profile?.email || '');
+          setProfileRole(data.profile?.role || '');
+          setEmailAlerts(!!data.notifications?.emailInstantAlerts);
+          setSmsAlerts(!!data.notifications?.smsCriticalAlerts);
+          setDailyDigest(!!data.notifications?.emailDailyDigest);
+          setTimezone(data.system?.defaultTimezone || 'Asia/Kolkata');
+          setRetention(data.system?.dataRetentionPolicy || '3');
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+        if (active) {
+          setErrorMessage('Failed to load settings from server.');
+          setIsLoading(false);
+        }
+      }
+    }
+    load();
+    return () => { active = true; };
+  }, []);
 
   async function handleSave(e) {
     e.preventDefault();
     setIsSaving(true);
     setSaveMessage('');
+    setErrorMessage('');
     
-    // Simulate API save delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    setIsSaving(false);
-    setSaveMessage('Settings saved successfully.');
-    
-    // Clear success message after 3 seconds
-    setTimeout(() => setSaveMessage(''), 3000);
+    try {
+      if (activeTab === 'profile') {
+        const result = await updateAdminProfile({ name: profileName });
+        setProfileName(result.name);
+        setSaveMessage('Profile settings updated successfully.');
+      } else if (activeTab === 'notifications') {
+        await updateAdminNotifications({
+          emailInstantAlerts: emailAlerts,
+          emailDailyDigest: dailyDigest,
+          smsCriticalAlerts: smsAlerts
+        });
+        setSaveMessage('Notification preferences updated successfully.');
+      } else if (activeTab === 'security') {
+        if (!currentPassword || !newPassword) {
+          throw new Error('Please fill in both current and new password fields.');
+        }
+        if (newPassword !== confirmPassword) {
+          throw new Error('New passwords do not match.');
+        }
+        await axiosInstance.patch('/api/auth/password', {
+          currentPassword,
+          newPassword,
+          confirmPassword
+        });
+        setSaveMessage('Password changed successfully. Redirecting to login...');
+        
+        // Clear password form fields
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        setTimeout(() => {
+          logout({ skipRequest: true });
+        }, 1500);
+      } else if (activeTab === 'system') {
+        await updateAdminSystem({
+          defaultTimezone: timezone,
+          dataRetentionPolicy: retention
+        });
+        setSaveMessage('System preferences updated successfully.');
+      }
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      const msg = err.response?.data?.message || err.message || 'Failed to save settings.';
+      setErrorMessage(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px]">
+        <Loader2 className="animate-spin text-[#0a1422]" size={36} />
+      </div>
+    );
   }
 
   return (
@@ -63,9 +160,11 @@ export default function Settings() {
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => {
                   setActiveTab(tab.id);
-                  setSaveMessage(''); // clear messages on tab switch
+                  setSaveMessage('');
+                  setErrorMessage('');
                 }}
                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a1422] ${
                   isActive 
@@ -103,8 +202,9 @@ export default function Settings() {
                     <input
                       type="text"
                       id="name"
-                      defaultValue={user?.name || 'Campus Admin'}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-999 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>
                   <div>
@@ -112,7 +212,7 @@ export default function Settings() {
                     <input
                       type="email"
                       id="email"
-                      defaultValue={user?.email || 'admin@smartcampus.edu'}
+                      value={profileEmail}
                       disabled
                       className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 shadow-sm cursor-not-allowed"
                     />
@@ -123,7 +223,7 @@ export default function Settings() {
                     <input
                       type="text"
                       id="role"
-                      defaultValue="Super Administrator"
+                      value={profileRole}
                       disabled
                       className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 shadow-sm cursor-not-allowed"
                     />
@@ -198,6 +298,8 @@ export default function Settings() {
                     <input
                       type="password"
                       id="currentPassword"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>
@@ -206,6 +308,8 @@ export default function Settings() {
                     <input
                       type="password"
                       id="newPassword"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                     <p className="mt-1.5 text-xs text-gray-500">Must be at least 12 characters and include a number and symbol.</p>
@@ -215,6 +319,8 @@ export default function Settings() {
                     <input
                       type="password"
                       id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>
@@ -228,7 +334,8 @@ export default function Settings() {
                     <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1.5">Default Timezone</label>
                     <select
                       id="timezone"
-                      defaultValue="Asia/Kolkata"
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     >
                       <option value="America/New_York">Eastern Time (US & Canada)</option>
@@ -240,7 +347,8 @@ export default function Settings() {
                     <label htmlFor="retention" className="block text-sm font-medium text-gray-700 mb-1.5">Data Retention Policy</label>
                     <select
                       id="retention"
-                      defaultValue="3"
+                      value={retention}
+                      onChange={(e) => setRetention(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     >
                       <option value="1">1 Year</option>
@@ -262,11 +370,16 @@ export default function Settings() {
                     {saveMessage}
                   </p>
                 )}
+                {errorMessage && (
+                  <p className="text-sm font-medium text-red-600 animate-in fade-in duration-300">
+                    {errorMessage}
+                  </p>
+                )}
               </div>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="inline-flex items-center justify-center min-w-[140px] rounded-lg bg-[#0a1422] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0a1422] focus:ring-offset-2 disabled:opacity-50 disabled:bg-gray-400 transition-colors"
+                className="inline-flex items-center justify-center min-w-[140px] rounded-lg bg-[#0a1422] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0a1422] focus:ring-offset-2 disabled:opacity-50 disabled:bg-gray-400 transition-colors cursor-pointer"
               >
                 {isSaving ? (
                   <>

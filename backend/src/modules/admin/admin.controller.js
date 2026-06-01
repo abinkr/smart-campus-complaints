@@ -43,3 +43,23 @@ export const updatePriority = async (req, res) => {
   const result = await adminService.patchPriority(req.params.id, req.user.id, req.body)
   return ApiResponse.ok(res, result, 'Priority updated')
 }
+
+export const loadSettings = async (req, res) => {
+  const settings = await adminService.getSettings(req.user.id)
+  return ApiResponse.ok(res, settings, 'Settings loaded')
+}
+
+export const saveProfileSettings = async (req, res) => {
+  const profile = await adminService.updateProfileSettings(req.user.id, req.body)
+  return ApiResponse.ok(res, profile, 'Profile settings updated')
+}
+
+export const saveNotificationSettings = async (req, res) => {
+  const notifications = await adminService.updateNotificationSettings(req.user.id, req.body)
+  return ApiResponse.ok(res, notifications, 'Notification settings updated')
+}
+
+export const saveSystemSettings = async (req, res) => {
+  const system = await adminService.updateSystemSettings(req.user.id, req.body)
+  return ApiResponse.ok(res, system, 'System preferences updated')
+}

@@ -161,3 +161,59 @@ export const createInternalNoteAndLog = async (noteData, logData) => {
 
   return intNote
 }
+
+export const findUserById = (id) =>
+  prisma.user.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      emailInstantAlerts: true,
+      emailDailyDigest: true,
+      smsCriticalAlerts: true,
+      isSuperAdmin: true,
+    },
+  })
+
+export const updateUser = (id, data) =>
+  prisma.user.update({
+    where: {
+      id,
+    },
+    data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      emailInstantAlerts: true,
+      emailDailyDigest: true,
+      smsCriticalAlerts: true,
+      isSuperAdmin: true,
+    },
+  })
+
+export const getSystemPreference = (key) =>
+  prisma.systemPreference.findUnique({
+    where: {
+      key,
+    },
+  })
+
+export const upsertSystemPreference = (key, value) =>
+  prisma.systemPreference.upsert({
+    where: {
+      key,
+    },
+    update: {
+      value,
+    },
+    create: {
+      key,
+      value,
+    },
+  })

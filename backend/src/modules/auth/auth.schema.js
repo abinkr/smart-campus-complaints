@@ -34,4 +34,13 @@ export const verifyMfaSchema = z.object({
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: strongPassword,
+  confirmPassword: z.string().min(1).optional(),
+}).refine((data) => {
+  if (data.confirmPassword && data.newPassword !== data.confirmPassword) {
+    return false
+  }
+  return true
+}, {
+  message: "New password and confirmation password do not match",
+  path: ["confirmPassword"],
 })

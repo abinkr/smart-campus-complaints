@@ -1,5 +1,5 @@
 import * as repo from './admin.repository.js'
-import { NotFoundError, BadRequestError } from '../../utils/ApiError.js'
+import { NotFoundError, BadRequestError, ForbiddenError } from '../../utils/ApiError.js'
 import { withCache, invalidateCachePattern } from '../../utils/cache.js'
 import { emailQueue } from '../../queues/email.queue.js'
 import { logger } from '../../utils/logger.js'
@@ -292,4 +292,80 @@ export const patchPriority = async (id, adminId, body) => {
   ])
 
   return updated
+}
+
+export const getSettings = async (userId) => {
+  const user = await repo.findUserById(userId)
+
+  if (!user) {
+    throw new NotFoundError('Admin user not found')
+  }
+
+  const defaultTimezone = await repo.getSystemPreference('default_timezone')
+  const dataRetentionPolicy = await repo.getSystemPreference('data_retention_years')
+
+  return {
+    profile: {
+      name: user.name,
+      email: user.email,
+      role: user.isSuperAdmin ? 'Super Administrator' : 'Administrator',
+    },
+    notifications: {
+      emailInstantAlerts: user.emailInstantAlerts,
+      emailDailyDigest: user.emailDailyDigest,
+      smsCriticalAlerts: user.smsCriticalAlerts,
+    },
+    system: {
+      defaultTimezone: defaultTimezone?.value || 'Asia/Kolkata',
+      dataRetentionPolicy: dataRetentionPolicy?.value || '3',
+    },
+  }
+}
+
+export const updateProfileSettings = async (userId, dto) => {
+  const updated = await repo.updateUser(userId, {
+    name: dto.name,
+  })
+
+  return {
+    name: updated.name,
+    email: updated.email,
+    role: updated.isSuperAdmin ? 'Super Administrator' : 'Administrator',
+  }
+}
+
+export const updateNotificationSettings = async (userId, dto) => {
+  const updated = await repo.updateUser(userId, {
+    emailInstantAlerts: dto.emailInstantAlerts,
+    emailDailyDigest: dto.emailDailyDigest,
+    smsCriticalAlerts: dto.smsCriticalAlerts,
+  })
+
+  return {
+    emailInstantAlerts: updated.emailInstantAlerts,
+    emailDailyDigest: updated.emailDailyDigest,
+    smsCriticalAlerts: updated.smsCriticalAlerts,
+  }
+}
+
+export const updateSystemSettings = async (userId, dto) => {
+  const user = await repo.findUserById(userId)
+
+  if (!user) {
+    throw new NotFoundError('Admin user not found')
+  }
+
+  if (!user.isSuperAdmin) {
+    throw new ForbiddenError('Only Super Administrators can update system preferences')
+  }
+
+  await Promise.all([
+    repo.upsertSystemPreference('default_timezone', dto.defaultTimezone),
+    repo.upsertSystemPreference('data_retention_years', dto.dataRetentionPolicy),
+  ])
+
+  return {
+    defaultTimezone: dto.defaultTimezone,
+    dataRetentionPolicy: dto.dataRetentionPolicy,
+  }
 }

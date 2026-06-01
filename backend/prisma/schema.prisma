@@ -25,6 +25,10 @@ model User {
   publicUpdates       PublicUpdate[]
   internalNotes       InternalNote[]
   studentFollowUps    StudentFollowUp[]
+  emailInstantAlerts  Boolean           @default(true) @map("email_instant_alerts")
+  emailDailyDigest    Boolean           @default(true) @map("email_daily_digest")
+  smsCriticalAlerts   Boolean           @default(false) @map("sms_critical_alerts")
+  isSuperAdmin        Boolean           @default(false) @map("is_super_admin")
 
   @@index([email], map: "idx_users_email")
   @@index([role], map: "idx_users_role")
@@ -118,6 +122,13 @@ model StudentFollowUp {
 
   @@index([complaintId], map: "idx_student_follow_ups_complaint_id")
   @@map("student_follow_ups")
+}
+
+model SystemPreference {
+  key   String @id @db.VarChar(100)
+  value String
+
+  @@map("system_preferences")
 }
 
 model RefreshToken {
