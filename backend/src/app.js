@@ -21,6 +21,7 @@ import authRoutes from './modules/auth/auth.routes.js'
 import complaintRoutes from './modules/complaint/complaint.routes.js'
 import adminRoutes from './modules/admin/admin.routes.js'
 import analyticsRoutes from './modules/analytics/analytics.routes.js'
+import notificationRoutes from './modules/notification/notification.routes.js'
 
 const getAllowedOrigins = () => {
   const rawOrigins = [config.CLIENT_URL, config.STUDENT_CLIENT_URL, config.ADMIN_CLIENT_URL].filter(Boolean)
@@ -156,6 +157,7 @@ export const createApp = () => {
 
   app.use('/api/auth', authRoutes)
   app.use('/api/complaints', complaintRoutes)
+  app.use('/api/notifications', notificationRoutes)
   app.use('/api/admin', adminRoutes)
   app.use('/api/analytics', analyticsRoutes)
 

@@ -5,6 +5,7 @@ import * as repo from './complaint.repository.js'
 import { emailQueue } from '../../queues/email.queue.js'
 import { nlpQueue } from '../../queues/nlp.queue.js'
 import { notifyHighPriorityComplaint } from '../admin/notification.service.js'
+import { notifyStudentComplaintSubmitted } from '../notification/notification.service.js'
 import { ForbiddenError, NotFoundError } from '../../utils/ApiError.js'
 import { invalidateCachePattern, withCache } from '../../utils/cache.js'
 import { logger } from '../../utils/logger.js'
@@ -100,6 +101,7 @@ export const submitComplaint = async (userId, body, file) => {
       priority: complaint.priority,
     }),
     notifyHighPriorityComplaint(complaint),
+    notifyStudentComplaintSubmitted(complaint),
     invalidateCachePattern(`complaints:user:${userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
     invalidateCachePattern('analytics:*'),

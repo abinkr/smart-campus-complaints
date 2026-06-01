@@ -4,6 +4,7 @@ import { withCache, invalidateCachePattern } from '../../utils/cache.js'
 import { emailQueue } from '../../queues/email.queue.js'
 import { logger } from '../../utils/logger.js'
 import { streamToCSV } from '../../utils/csvExport.js'
+import { notifyStudentPublicUpdate, notifyStudentStatusUpdate } from '../notification/notification.service.js'
 
 const cacheKeyForList = (filters, pagination) =>
   `admin:complaints:${JSON.stringify({
@@ -70,6 +71,12 @@ export const updateComplaint = async (id, adminId, dto) => {
         },
       }
     ),
+    oldStatus !== dto.status
+      ? notifyStudentStatusUpdate(complaint, dto.status)
+      : null,
+    dto.adminNote && dto.adminNote !== complaint.adminNote
+      ? notifyStudentPublicUpdate(complaint, dto.adminNote)
+      : null,
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
@@ -143,6 +150,7 @@ export const submitPublicUpdate = async (id, adminId, body) => {
   )
 
   Promise.allSettled([
+    notifyStudentPublicUpdate(complaint, body.message, pubUpdate.id),
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
@@ -222,6 +230,9 @@ export const patchStatus = async (id, adminId, body) => {
         },
       }
     ),
+    oldStatus !== body.status
+      ? notifyStudentStatusUpdate(complaint, body.status)
+      : null,
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
