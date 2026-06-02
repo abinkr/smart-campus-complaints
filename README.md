@@ -23,7 +23,7 @@ A comprehensive complaint management platform for campus environments that enabl
 
 ### What is this project?
 
-**Smart Campus Complaints** is a web application that helps students report problems on campus (like maintenance issues, cleanliness concerns, or facility problems) and helps campus administrators[...]
+**Smart Campus Complaints** is a web application that helps students report problems on campus (like maintenance issues, cleanliness concerns, or facility problems) and helps campus administrators manage and resolve them efficiently.
 
 Think of it like a **suggestion box**, but digital and organized:
 - **Students** use a portal to submit complaints
@@ -856,11 +856,11 @@ In a real-world campus setting, students frequently encounter broken amenities, 
 - **Students** log into the student portal, fill out a complaint form, attach an image, and provide location details.
 - The **NLP Service** instantly processes the text and assigns an appropriate category (e.g., "Maintenance").
 - **Administrators** monitor a centralized dashboard in the admin portal where they review incoming complaints, update their statuses (Open, In Progress, Resolved), and assign staff.
-- The system generates **Analytics** that give campus management visual trends (e.g., peak complaint times or recurrent issues in specific departments), speeding up response times and improving overall campus experience.
+- The system generates **Analytics** that give campus management visual trends (e.g., peak complaint times or recurrent issues in specific departments), speeding up response times and improving operational efficiency.
 
 ### Why This Project Is Useful
 
-- **For Students:** Provides a straightforward, accessible platform to report issues with transparent status tracking, ensuring their concerns are heard and addressed rather than lost in paperwork or informal channels.
+- **For Students:** Provides a straightforward, accessible platform to report issues with transparent status tracking, ensuring their concerns are heard and addressed rather than lost in paperwork.
 - **For Administrators:** Centralizes all complaints into one dashboard, offering powerful filtering, searching, and exporting capabilities.
 - **For College Management:** Analytics provide data-driven insights to identify recurring problems, allocate maintenance budgets efficiently, and measure the performance of different campus departments.
 - **For Maintenance Departments:** Streamlines workflows and prioritizes tasks, preventing trivial issues from escalating into major problems.
@@ -881,14 +881,35 @@ In a real-world campus setting, students frequently encounter broken amenities, 
 
 ---
 
-## 📁 Project Structure Summary
+## 📊 Language Composition
+
+This repository uses multiple programming languages to deliver different components of the system:
 
 ```
-Language Composition:
-- JavaScript: 92.4% (Frontend + Backend)
-- Python: 6.2% (NLP Service)
-- Other: 1.4%
+Language Breakdown:
+├── JavaScript:  92.4% (Frontend + Backend)
+├── Python:       6.2% (NLP Service)
+└── Other:        1.4%
 ```
+
+### Breakdown by Component
+
+| Component | Language | Usage | Files |
+|-----------|----------|-------|-------|
+| **Frontend** | JavaScript (React) | Student & Admin portals, UI components, state management | `.jsx`, `.js` |
+| **Backend** | JavaScript (Node.js) | API routes, controllers, database logic, middleware | `.js` |
+| **NLP Service** | Python | Machine learning, complaint categorization, AI logic | `.py` |
+| **Configuration** | Other | Docker, YAML, JSON, env files, etc. | `Dockerfile`, `docker-compose.yml`, `.env` |
+
+### Why This Language Mix?
+
+- **JavaScript (92.4%)**: Chosen for frontend and backend because React (frontend) and Node.js (backend) provide a unified full-stack development experience, enabling code sharing (utilities, types) and faster development with a single language across multiple layers.
+- **Python (6.2%)**: Selected for the NLP service because Python has the richest ecosystem for machine learning, data processing, and AI libraries (scikit-learn, TensorFlow, NLTK), making it the industry standard for NLP tasks.
+- **Other (1.4%)**: Configuration files, Docker setup, and deployment scripts that support the project infrastructure.
+
+---
+
+## 📁 Project Structure Summary
 
 ### Key Files to Know
 
