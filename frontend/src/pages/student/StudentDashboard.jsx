@@ -35,7 +35,7 @@ export default function StudentDashboard() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-gradient-to-r from-primary to-primary/95 text-white rounded-2xl p-8 shadow-md relative overflow-hidden group">
           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
           <div className="relative z-10 space-y-2">
-            <p className="font-label-md text-label-md text-on-secondary-fixed uppercase tracking-widest font-semibold">
+            <p className="font-label-md text-label-md text-white uppercase tracking-widest font-semibold">
               Student Hub
             </p>
             <h1 className="font-display-lg text-display-lg leading-tight font-bold">
