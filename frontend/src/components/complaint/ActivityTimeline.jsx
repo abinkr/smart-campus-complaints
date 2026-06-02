@@ -2,6 +2,7 @@ import StatusBadge from '../ui/StatusBadge';
 import { formatDateTime } from '../../utils/formatDate';
 import { useSystemTimezone } from '../../context/TimezoneContext';
 import { ArrowRight, Clock, User, CheckCircle2, MessageSquare, AlertCircle, ShieldAlert } from 'lucide-react';
+import { PORTAL_ROLE } from '../../portalConfig';
 
 function TimelineSkeleton() {
   return (
@@ -39,15 +40,20 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
     return <TimelineSkeleton />;
   }
 
-  if (!logs || logs.length === 0) {
+  // Strictly filter out internal logs in the student portal
+  const filteredLogs = PORTAL_ROLE === 'student' 
+    ? logs.filter((log) => !log.isInternal) 
+    : logs;
+
+  if (!filteredLogs || filteredLogs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center bg-surface rounded-2xl border border-outline-variant/30 border-dashed p-6">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container mb-3 text-outline">
           <Clock size={20} aria-hidden="true" />
         </span>
-        <p className="text-sm font-semibold text-primary">No activity logged yet</p>
+        <p className="text-sm font-semibold text-primary">No admin updates yet.</p>
         <p className="mt-1 text-xs text-on-surface-variant max-w-[280px]">
-          Status changes, assignments, and updates will be logged here in chronological order.
+          Updates will appear here after an admin reviews the complaint.
         </p>
       </div>
     );
@@ -55,8 +61,8 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
 
   return (
     <ol className="relative space-y-0 text-left" aria-label="Complaint activity timeline">
-      {logs.map((log, index) => {
-        const isLast = index === logs.length - 1;
+      {filteredLogs.map((log, index) => {
+        const isLast = index === filteredLogs.length - 1;
         const isResolved = log.newStatus === 'RESOLVED';
         const isSubmit = !log.oldStatus && log.newStatus === 'OPEN';
         const isInternal = Boolean(log.isInternal);
@@ -113,7 +119,7 @@ export default function ActivityTimeline({ logs = [], isLoading = false }) {
               <div className="flex flex-wrap items-center gap-2">
                 {isInternal ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Internal note</span>
+                    <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Internal Note</span>
                   </div>
                 ) : log.oldStatus ? (
                   <div className="flex items-center gap-1.5 bg-surface p-1 rounded-lg border border-outline-variant/30 shadow-sm">

@@ -3,7 +3,8 @@
 // and updating a specific complaint from the admin portal.
 
 import { useEffect, useRef, useState } from 'react';
-import { X, Image as ImageIcon, Loader2, Sparkles, MessageSquare, ShieldAlert } from 'lucide-react';
+import { X, Sparkles, ShieldAlert, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useSystemTimezone } from '../../context/TimezoneContext';
 import { useFocusTrap } from '../../utils/useFocusTrap';
 import { formatDate } from '../../utils/formatDate';
@@ -102,8 +103,10 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
       } else {
         onClose();
       }
+      toast.success('Complaint updated successfully.');
     } catch (error) {
       console.error('Failed to save complaint', error);
+      toast.error('We could not complete this action. Please try again.');
       setIsSaving(false);
     }
   }
@@ -136,7 +139,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
         <div className="flex shrink-0 items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
           <div>
             <h2 id="panel-title" className="text-lg font-bold text-gray-900 leading-tight">
-              Review Ticket
+              Complaint Review
             </h2>
             <p className="text-xs font-mono text-gray-400 mt-0.5 uppercase tracking-wide">
               ID: {complaint.id}
@@ -173,6 +176,9 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               </div>
 
               <div className="space-y-1.5">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  Complaint Information
+                </span>
                 <h3 className="text-lg font-bold text-gray-900 leading-snug">
                   {complaint.title}
                 </h3>
@@ -184,14 +190,14 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-outline-variant/30 text-xs">
                 <div>
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
-                    LODGED BY STUDENT
+                    Student Information
                   </span>
                   <span className="font-semibold text-gray-900 block">{complaint.user?.name}</span>
                   <span className="text-gray-500 block">{complaint.user?.email}</span>
                 </div>
                 <div>
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
-                    SUBMISSION DATE
+                    Submission Date
                   </span>
                   <span className="font-semibold text-gray-900 block">
                     {formatDate(complaint.createdAt, timezone)}
@@ -204,12 +210,12 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
             {complaint.imageUrl && (
               <section aria-label="Attached Image Evidence" className="bg-white rounded-2xl border border-outline-variant/60 p-5 shadow-sm">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">
-                  Supporting Photo Attachment
+                  Proof Image
                 </span>
                 <div className="relative h-44 w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 group cursor-pointer flex justify-center">
                   <img
                     src={complaint.imageUrl}
-                    alt="Evidence file"
+                    alt="Uploaded proof image for complaint"
                     className="h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                 </div>
@@ -235,7 +241,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               {/* Status Select */}
               <div>
                 <label htmlFor="edit-status" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-                  Triage Status
+                  Update Status
                 </label>
                 <select
                   id="edit-status"
@@ -253,7 +259,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               {/* Department Select */}
               <div>
                 <label htmlFor="edit-department" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
-                  Resolving Department
+                  Assign Department
                 </label>
                 <select
                   id="edit-department"
@@ -282,7 +288,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                       : 'border-transparent text-gray-500 hover:text-gray-900'
                   }`}
                 >
-                  Public Update Response
+                  Public Update for Student
                 </button>
                 <button
                   type="button"
@@ -293,7 +299,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                       : 'border-transparent text-gray-500 hover:text-gray-900'
                   }`}
                 >
-                  Internal Log Note
+                  Internal Admin Note
                 </button>
               </div>
 
@@ -301,7 +307,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
               {noteTab === 'public' && (
                 <div className="space-y-1">
                   <span className="block text-[9px] font-bold text-secondary uppercase tracking-wide">
-                    Visible to Student - Shared on Complaint timeline
+                    This message will be visible to the student.
                   </span>
                   <textarea
                     id="edit-note"
@@ -320,7 +326,7 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1 text-[9px] font-bold text-amber-600 uppercase tracking-wide">
                     <ShieldAlert size={10} />
-                    <span>Private admin note - hidden from students</span>
+                    <span>This note is only visible to admins. Students will not see it.</span>
                   </div>
                   <textarea
                     id="edit-internal-note"
@@ -353,10 +359,10 @@ export default function ComplaintDetailPanel({ complaint, onClose, onSave }) {
                 {isSaving ? (
                   <>
                     <Loader2 size={16} className="animate-spin mr-2" aria-hidden="true" />
-                    Saving...
+                    Saving Updates...
                   </>
                 ) : (
-                  'Save Changes'
+                  'Save Complaint Updates'
                 )}
               </button>
             </div>

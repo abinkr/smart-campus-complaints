@@ -11,11 +11,11 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
 const registerSchema = z.object({
-  name: z.string().min(2).max(100),
-  email: z.string().email(),
+  name: z.string().min(2, 'Name must be at least 2 characters.').max(100, 'Name cannot exceed 100 characters.'),
+  email: z.string().email('Enter a valid email address.'),
   password: z
     .string()
-    .min(8)
+    .min(8, 'Password must be at least 8 characters.')
     .regex(/[A-Z]/, 'Password must include an uppercase letter.')
     .regex(/[a-z]/, 'Password must include a lowercase letter.')
     .regex(/[0-9]/, 'Password must include a number.')
@@ -28,9 +28,10 @@ const registerSchema = z.object({
 });
 
 function parseApiError(error) {
-  if (!error.response) return 'Unable to connect. Please try again.';
-  if (error.response.status === 403) return "You don't have permission to do this";
-  return error.response?.data?.message || 'Something went wrong';
+  if (!error.response) return 'Unable to connect to the server. Check your connection and try again.';
+  if (error.response.status === 401) return 'Your session has expired. Please log in again.';
+  if (error.response.status === 403) return 'You do not have permission to perform this action.';
+  return error.response?.data?.message || 'We could not complete this action. Please try again.';
 }
 
 export default function Register() {

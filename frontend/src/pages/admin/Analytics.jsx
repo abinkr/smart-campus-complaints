@@ -60,6 +60,8 @@ export default function Analytics() {
     };
   }, []);
 
+  const hasData = trendData.length > 0 || departmentData.length > 0;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
       
@@ -71,129 +73,128 @@ export default function Analytics() {
         </p>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Line Chart — 6 Month Trend */}
-        <ChartCard
-          title="Resolution Volume Trend"
-          description="Number of complaints submitted vs resolved over the last 6 months"
-        >
-          {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  name="Submitted"
-                  stroke="#0a1422"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#0a1422', strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: '#0a1422', strokeWidth: 0 }}
-                />
-                {/* Simulated 'Resolved' trend line using count * 0.85 for mock visual variety */}
-                <Line
-                  type="monotone"
-                  dataKey={(d) => Math.round(d.count * 0.85)}
-                  name="Resolved"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: '#10b981', strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        {/* Bar Chart — Department Workload */}
-        <ChartCard
-          title="Department Workload & Resolution"
-          description="Comparison of total assigned vs resolved complaints by department"
-        >
-          {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Loading chart...</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={departmentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
-                <Tooltip content={<DepartmentTooltip />} />
-                <Bar dataKey="totalComplaints" name="Total Assigned" fill="#e5e7eb" radius={[4, 4, 0, 0]} barSize={24} />
-                <Bar dataKey="resolved" name="Resolved" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Department Performance Data Table */}
-      <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden" aria-label="Department Performance Metrics">
-        <div className="px-5 py-4 border-b border-[#e5e7eb]">
-          <h3 className="text-sm font-semibold text-[#0a1422] leading-tight tracking-tight">
-            Department Performance Matrix
-          </h3>
-          <p className="mt-0.5 text-xs text-gray-500">Detailed breakdown of efficiency and resolution speeds.</p>
+      {isLoading ? (
+        <div className="flex h-full items-center justify-center text-sm text-gray-400 min-h-[400px]">
+          Loading analytics...
         </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-[#f8f9fa] text-xs uppercase tracking-wider text-gray-500 border-b border-[#e5e7eb]">
-              <tr>
-                <th scope="col" className="px-5 py-3 font-semibold">Department</th>
-                <th scope="col" className="px-5 py-3 font-semibold text-right">Total Assigned</th>
-                <th scope="col" className="px-5 py-3 font-semibold text-right">Resolved</th>
-                <th scope="col" className="px-5 py-3 font-semibold text-right">Resolution Rate</th>
-                <th scope="col" className="px-5 py-3 font-semibold text-right">Avg. Time to Resolve</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center text-gray-400">Loading performance data...</td>
-                </tr>
-              ) : (
-                departmentData.map((dept) => {
-                  const resolutionRate = dept.totalComplaints > 0 
-                    ? Math.round((dept.resolved / dept.totalComplaints) * 100) 
-                    : 0;
-                  
-                  return (
-                    <tr key={dept.department} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3 font-medium text-gray-900">{dept.department}</td>
-                      <td className="px-5 py-3 text-right">{dept.totalComplaints}</td>
-                      <td className="px-5 py-3 text-right">{dept.resolved}</td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <span className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden flex">
-                            <span 
-                              className={`h-full rounded-full ${resolutionRate >= 80 ? 'bg-green-500' : resolutionRate >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} 
-                              style={{ width: `${resolutionRate}%` }} 
-                            />
-                          </span>
-                          <span className="w-9">{resolutionRate}%</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-right font-medium">
-                        {dept.avgResolutionDays} <span className="text-gray-400 font-normal">days</span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      ) : !hasData ? (
+        <div className="bg-white rounded-2xl border border-outline-variant/60 p-12 text-center shadow-sm">
+          <h3 className="text-lg font-bold text-primary mb-2">No analytics data available yet.</h3>
+          <p className="text-sm text-gray-500">Charts will appear after complaints are submitted and resolved.</p>
         </div>
-      </section>
+      ) : (
+        <>
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Line Chart — 6 Month Trend */}
+            <ChartCard
+              title="Resolution Volume Trend"
+              description="Number of complaints submitted vs resolved over the last 6 months"
+            >
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    name="Submitted"
+                    stroke="#0a1422"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: '#0a1422', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#0a1422', strokeWidth: 0 }}
+                  />
+                  {/* Simulated 'Resolved' trend line using count * 0.85 for mock visual variety */}
+                  <Line
+                    type="monotone"
+                    dataKey={(d) => Math.round(d.count * 0.85)}
+                    name="Resolved"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: '#10b981', strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            {/* Bar Chart — Department Workload */}
+            <ChartCard
+              title="Department Workload & Resolution"
+              description="Comparison of total assigned vs resolved complaints by department"
+            >
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={departmentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                  <Tooltip content={<DepartmentTooltip />} />
+                  <Bar dataKey="totalComplaints" name="Total Assigned" fill="#e5e7eb" radius={[4, 4, 0, 0]} barSize={24} />
+                  <Bar dataKey="resolved" name="Resolved" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+
+          {/* Department Performance Data Table */}
+          <section className="rounded-2xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden" aria-label="Department Performance Metrics">
+            <div className="px-5 py-4 border-b border-[#e5e7eb]">
+              <h3 className="text-sm font-semibold text-[#0a1422] leading-tight tracking-tight">
+                Department Performance Matrix
+              </h3>
+              <p className="mt-0.5 text-xs text-gray-500">Detailed breakdown of efficiency and resolution speeds.</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-[#f8f9fa] text-xs uppercase tracking-wider text-gray-500 border-b border-[#e5e7eb]">
+                  <tr>
+                    <th scope="col" className="px-5 py-3 font-semibold">Department</th>
+                    <th scope="col" className="px-5 py-3 font-semibold text-right">Total Assigned</th>
+                    <th scope="col" className="px-5 py-3 font-semibold text-right">Resolved</th>
+                    <th scope="col" className="px-5 py-3 font-semibold text-right">Resolution Rate</th>
+                    <th scope="col" className="px-5 py-3 font-semibold text-right">Avg. Time to Resolve</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {departmentData.map((dept) => {
+                    const resolutionRate = dept.totalComplaints > 0 
+                      ? Math.round((dept.resolved / dept.totalComplaints) * 100) 
+                      : 0;
+                    
+                    return (
+                      <tr key={dept.department} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-gray-900">{dept.department}</td>
+                        <td className="px-5 py-3 text-right">{dept.totalComplaints}</td>
+                        <td className="px-5 py-3 text-right">{dept.resolved}</td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden flex">
+                              <span 
+                                className={`h-full rounded-full ${resolutionRate >= 80 ? 'bg-green-500' : resolutionRate >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                                style={{ width: `${resolutionRate}%` }} 
+                              />
+                            </span>
+                            <span className="w-9">{resolutionRate}%</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-right font-medium">
+                          {dept.avgResolutionDays} <span className="text-gray-400 font-normal">days</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
 
     </div>
   );

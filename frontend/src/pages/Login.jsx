@@ -21,9 +21,10 @@ const mfaSchema = z.object({
 });
 
 function parseApiError(error) {
-  if (!error.response) return 'Unable to connect. Please try again.';
-  if (error.response.status === 403) return "You don't have permission to do this";
-  return error.response?.data?.message || 'Something went wrong';
+  if (!error.response) return 'Unable to connect to the server. Check your connection and try again.';
+  if (error.response.status === 401) return 'Your session has expired. Please log in again.';
+  if (error.response.status === 403) return 'You do not have permission to perform this action.';
+  return error.response?.data?.message || 'We could not complete this action. Please try again.';
 }
 
 export default function Login() {
@@ -112,7 +113,7 @@ export default function Login() {
                   label="Email"
                   type="email"
                   autoComplete="email"
-                  placeholder="Email"
+                  placeholder="Email Address"
                   icon={Mail}
                   error={errors.email?.message}
                   {...register('email')}

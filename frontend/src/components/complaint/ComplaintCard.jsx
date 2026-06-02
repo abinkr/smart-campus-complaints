@@ -4,12 +4,12 @@ import ActivityTimeline from './ActivityTimeline';
 import { getComplaintById, submitFollowUp } from '../../api/complaintApi';
 import { useSystemTimezone } from '../../context/TimezoneContext';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
-import { Sparkles, MessageSquare, AlertCircle, Calendar, Shield, MapPin, Eye } from 'lucide-react';
+import { Sparkles, MessageSquare, Eye } from 'lucide-react';
 
 const STATUS_EXPLANATIONS = {
-  open: "Your concern has been logged and is awaiting administrative triage.",
-  in_progress: "Our team is actively investigating the concern and coordinating resolution.",
-  resolved: "The concern has been addressed and marked as resolved. You can review the details below."
+  open: "Your complaint has been submitted and is waiting for admin review.",
+  in_progress: "Your complaint is being handled by the assigned department.",
+  resolved: "Your complaint has been marked as resolved."
 };
 
 export default function ComplaintCard({ complaint, onClick }) {
@@ -69,12 +69,12 @@ export default function ComplaintCard({ complaint, onClick }) {
   // Map status to badges
   const statusConfig = {
     open: {
-      label: 'Pending',
+      label: 'Open',
       bgClass: 'bg-error-container text-on-error-container border border-error-container/30',
       icon: 'hourglass_empty'
     },
     in_progress: {
-      label: 'In Review',
+      label: 'In Progress',
       bgClass: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim/30',
       icon: 'visibility'
     },
@@ -178,7 +178,7 @@ export default function ComplaintCard({ complaint, onClick }) {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setModalOpen(false)}
-          title={`Complaint Tracking Details`}
+          title={`Complaint Details`}
           maxWidth="max-w-2xl"
         >
           <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-1">
@@ -214,14 +214,14 @@ export default function ComplaintCard({ complaint, onClick }) {
             <div className="bg-secondary/5 rounded-xl border border-secondary/15 p-4 flex gap-3 items-start">
               <span className="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">info</span>
               <div>
-                <p className="text-xs font-bold text-primary uppercase tracking-wide">Status Triage Info</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wide">Current Status</p>
                 <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">
                   {STATUS_EXPLANATIONS[complaint.status?.toLowerCase()] || STATUS_EXPLANATIONS.open}
                 </p>
               </div>
             </div>
 
-            {/* Metadata Fields Grid */}
+            {/* Metadata Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-surface p-4 rounded-xl border border-outline-variant/30">
               <div>
                 <p className="text-[10px] text-outline uppercase font-bold tracking-wider mb-0.5">Category</p>
@@ -246,49 +246,49 @@ export default function ComplaintCard({ complaint, onClick }) {
               <div className="space-y-2">
                 <p className="text-[10px] text-outline uppercase font-bold tracking-wider flex items-center gap-1">
                   <Eye size={12} />
-                  Supporting Evidence Image
+                  Proof Image
                 </p>
                 <div className="overflow-hidden rounded-xl border border-outline-variant/50 shadow-sm max-h-[300px] flex justify-center bg-surface">
                   <img
                     src={complaint.imageUrl}
-                    alt="Lodge evidence"
+                    alt="Uploaded proof image for complaint"
                     className="object-contain max-h-[300px] w-full"
                   />
                 </div>
               </div>
             )}
 
-            {/* AI Classification Confidence (exposed directly to student) */}
+            {/* AI Classification Confidence */}
             {confidencePercent && (
               <div className="bg-surface-container-low border border-outline-variant/50 p-4 rounded-xl flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Sparkles size={16} className="text-secondary shrink-0" />
                   <div>
-                    <p className="text-xs font-bold text-primary">NLP AI Triage Prediction</p>
-                    <p className="text-[11px] text-on-surface-variant">Classified categories are routed automatically based on statistical model confidence.</p>
+                    <p className="text-xs font-bold text-primary">AI Category Suggestion</p>
+                    <p className="text-[11px] text-on-surface-variant">AI suggested category based on your complaint title and description.</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-bold text-secondary font-mono">{confidencePercent}</span>
-                  <span className="block text-[9px] font-semibold text-outline uppercase tracking-wider">Confidence</span>
+                  <span className="block text-[9px] font-semibold text-outline uppercase tracking-wider">Confidence Score</span>
                 </div>
               </div>
             )}
 
             {/* Resolution Note if available */}
-            {complaint.adminNote && (
-              <div className="rounded-xl border border-outline-variant/60 bg-tertiary-fixed/5 p-4 space-y-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-on-tertiary-fixed-variant flex items-center gap-1">
-                  <MessageSquare size={12} />
-                  Resolution Response Message
-                </p>
-                <p className="text-sm text-primary leading-relaxed">{complaint.adminNote}</p>
-              </div>
-            )}
+            <div className="rounded-xl border border-outline-variant/60 bg-tertiary-fixed/5 p-4 space-y-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-outline flex items-center gap-1">
+                <MessageSquare size={12} />
+                Latest Admin Update
+              </p>
+              <p className="text-sm text-primary leading-relaxed">
+                {complaint.adminNote || "No admin update has been shared yet."}
+              </p>
+            </div>
 
             {/* Unified Activity Timeline Logs */}
             <div className="space-y-4 pt-2 border-t border-outline-variant/40">
-              <p className="text-xs font-bold uppercase tracking-wider text-outline">Resolution Lifecycle Timeline</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-outline">Complaint Timeline</p>
               <ActivityTimeline logs={activeDetail.logs || []} isLoading={isLoadingDetails} />
             </div>
 

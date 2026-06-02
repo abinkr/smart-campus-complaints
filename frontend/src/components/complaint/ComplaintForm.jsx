@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useSubmitComplaint } from '../../hooks/useComplaints';
-import { Sparkles, HelpCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, HelpCircle } from 'lucide-react';
 
 const complaintSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters').max(200, 'Title cannot exceed 200 characters'),
@@ -113,7 +113,7 @@ export default function ComplaintForm() {
 
     try {
       await mutation.mutateAsync(formData);
-      toast.success('Complaint submitted successfully');
+      toast.success('Complaint submitted successfully. The admin team will review it and update the status.');
       reset();
       navigate('/history');
     } catch {
@@ -131,7 +131,7 @@ export default function ComplaintForm() {
             <input
               type="text"
               id="title"
-              placeholder="e.g. Broken water purifier in Block C third floor"
+              placeholder="Example: Water leak near Block A"
               className={`input-base ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
               {...register('title')}
             />
@@ -139,18 +139,18 @@ export default function ComplaintForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <AutoClassifiedField id="category" label="Category (Auto-classified)" />
-            <AutoClassifiedField id="priority" label="Priority Level (Auto-classified)" />
+            <AutoClassifiedField id="category" label="AI Category Suggestion" />
+            <AutoClassifiedField id="priority" label="Priority Level" />
           </div>
 
           <hr className="border-t border-outline-variant border-opacity-40" />
 
           <div>
-            <label className="label-base text-[#0a1422] font-semibold" htmlFor="description">Detailed Description *</label>
+            <label className="label-base text-[#0a1422] font-semibold" htmlFor="description">Complaint Description *</label>
             <textarea
               id="description"
               rows="5"
-              placeholder="Describe the issue in detail, its exact location, and how it impacts campus life..."
+              placeholder="Explain what happened, where it happened, and how urgent it is."
               className={`w-full bg-surface-container-lowest border border-outline-variant/60 rounded-xl font-body-md text-body-md text-on-surface p-4 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all duration-200 resize-y min-h-[160px] shadow-sm hover:border-outline ${
                 errors.description ? 'border-red-500' : ''
               }`}
@@ -161,7 +161,7 @@ export default function ComplaintForm() {
 
           {/* Evidence Upload */}
           <div>
-            <span className="label-base text-[#0a1422] font-semibold mb-2 block">Supporting Evidence (Optional)</span>
+            <span className="label-base text-[#0a1422] font-semibold mb-2 block">Upload Proof Image</span>
             <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(event) => event.preventDefault()}
@@ -180,8 +180,8 @@ export default function ComplaintForm() {
               <p className="font-body-md text-body-md text-on-surface mb-1">
                 <span className="font-bold text-secondary">Click to upload</span> or drag and drop
               </p>
-              <p className="font-label-md text-label-md text-outline">
-                PNG, JPG, or WebP (max. 5MB)
+              <p className="font-label-md text-label-md text-outline px-4">
+                Add a clear photo to help the admin team understand the issue faster. (PNG, JPG, or WebP up to 5MB)
               </p>
               <input
                 id="image"
@@ -234,7 +234,7 @@ export default function ComplaintForm() {
               className="px-6 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-gray-800 transition-colors text-center shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               type="submit"
             >
-              {mutation.isPending ? 'Submitting...' : 'Submit Complaint'}
+              {mutation.isPending ? 'Submitting Complaint...' : 'Submit Complaint'}
             </button>
           </div>
         </form>

@@ -13,7 +13,7 @@
 //   setFilters — state setter function from parent
 //   isLoading  — boolean — optionally disables inputs
 
-import { Filter, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 const CATEGORIES = [
   'Plumbing',
@@ -62,7 +62,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
         {/* ---- Search Input ---- */}
         <div className="flex-1 min-w-[240px]">
           <label htmlFor="search-complaints" className="sr-only">
-            Search complaints
+            Search complaints, students, locations, or IDs
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
@@ -72,7 +72,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               type="text"
               id="search-complaints"
               className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] disabled:opacity-50"
-              placeholder="Search title, ID, or student..."
+              placeholder="Search complaints, students, locations, or IDs"
               value={filters.search || ''}
               onChange={(e) => updateFilter('search', e.target.value)}
               disabled={isLoading}
@@ -85,7 +85,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
           {/* Status */}
           <div className="w-32 shrink-0">
             <label htmlFor="filter-status" className="sr-only">
-              Filter by status
+              Status
             </label>
             <select
               id="filter-status"
@@ -94,7 +94,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               onChange={(e) => updateFilter('status', e.target.value)}
               disabled={isLoading}
             >
-              <option value="">All Statuses</option>
+              <option value="">Status</option>
               <option value="OPEN">Open</option>
               <option value="IN_PROGRESS">In Progress</option>
               <option value="RESOLVED">Resolved</option>
@@ -104,7 +104,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
           {/* Priority */}
           <div className="w-32 shrink-0">
             <label htmlFor="filter-priority" className="sr-only">
-              Filter by priority
+              Priority
             </label>
             <select
               id="filter-priority"
@@ -113,7 +113,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               onChange={(e) => updateFilter('priority', e.target.value)}
               disabled={isLoading}
             >
-              <option value="">All Priorities</option>
+              <option value="">Priority</option>
               <option value="HIGH">High</option>
               <option value="MEDIUM">Medium</option>
               <option value="LOW">Low</option>
@@ -123,7 +123,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
           {/* Category */}
           <div className="w-40 shrink-0">
             <label htmlFor="filter-category" className="sr-only">
-              Filter by category
+              Category
             </label>
             <select
               id="filter-category"
@@ -132,7 +132,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               onChange={(e) => updateFilter('category', e.target.value)}
               disabled={isLoading}
             >
-              <option value="">All Categories</option>
+              <option value="">Category</option>
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -151,7 +151,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               aria-label="Clear all filters"
             >
               <X size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">Clear</span>
+              <span className="hidden sm:inline">Clear Filters</span>
             </button>
           )}
         </div>

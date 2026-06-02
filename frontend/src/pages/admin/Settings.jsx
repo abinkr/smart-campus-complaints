@@ -18,7 +18,7 @@ const TABS = [
 ];
 
 const validateNewPassword = (password) => {
-  if (password.length < 8) return 'New password must be at least 8 characters.';
+  if (password.length < 12) return 'New password must be at least 12 characters.';
   if (!/[0-9]/.test(password)) return 'New password must include at least one number.';
   if (!/[^A-Za-z0-9]/.test(password)) return 'New password must include at least one symbol.';
   return '';
@@ -163,7 +163,7 @@ export default function Settings() {
       <div>
         <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your account settings, notification preferences, and system configurations.
+          Manage your admin profile, notifications, security, and system preferences.
         </p>
       </div>
 
@@ -204,7 +204,10 @@ export default function Settings() {
             {/* Header */}
             <div className="px-6 py-5 border-b border-[#e5e7eb]">
               <h2 className="text-lg font-semibold text-gray-900 leading-tight">
-                {TABS.find(t => t.id === activeTab)?.label}
+                {activeTab === 'profile' && 'Admin Profile'}
+                {activeTab === 'notifications' && 'Notification Preferences'}
+                {activeTab === 'security' && 'Change Password'}
+                {activeTab === 'system' && 'System Preferences'}
               </h2>
             </div>
 
@@ -221,7 +224,7 @@ export default function Settings() {
                       id="name"
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-999 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
                   </div>
                   <div>
@@ -233,7 +236,7 @@ export default function Settings() {
                       disabled
                       className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 shadow-sm cursor-not-allowed"
                     />
-                    <p className="mt-1.5 text-xs text-gray-500">Contact IT support to change your institutional email.</p>
+                    <p className="mt-1.5 text-xs text-gray-500">Contact support to change your institutional email.</p>
                   </div>
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1.5">Access Role</label>
@@ -244,6 +247,7 @@ export default function Settings() {
                       disabled
                       className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 shadow-sm cursor-not-allowed"
                     />
+                    <p className="mt-1.5 text-xs text-gray-500">Your access level is managed by the system administrator.</p>
                   </div>
                 </div>
               )}
@@ -265,7 +269,7 @@ export default function Settings() {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">Instant Alerts</span>
-                          <span className="text-xs text-gray-500">Receive an email immediately when a High Priority complaint is filed.</span>
+                          <span className="text-xs text-gray-500">Receive an email when a high-priority complaint is submitted.</span>
                         </div>
                       </label>
                       <label className="flex items-start gap-3 cursor-pointer group">
@@ -279,12 +283,11 @@ export default function Settings() {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">Daily Digest</span>
-                          <span className="text-xs text-gray-500">Receive a daily summary of all new and resolved complaints.</span>
+                          <span className="text-xs text-gray-500">Receive a daily summary of new and resolved complaints.</span>
                         </div>
                       </label>
                     </div>
                   </div>
-                  
                 </div>
               )}
 
@@ -314,7 +317,7 @@ export default function Settings() {
                       required
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
                     />
-                    <p className="mt-1.5 text-xs text-gray-500">Must be at least 8 characters and include a number and symbol.</p>
+                    <p className="mt-1.5 text-xs text-gray-500">Use at least 12 characters with a number and symbol.</p>
                   </div>
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
@@ -334,18 +337,32 @@ export default function Settings() {
               {/* System Preferences Tab */}
               {activeTab === 'system' && (
                 <div className="max-w-xl space-y-6">
+                  {!isSuperAdmin && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
+                      <Lock size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                        System preferences are restricted. Only Super Administrators can update timezone and data retention settings.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1.5">Default Timezone</label>
                     <select
                       id="timezone"
                       value={timezone}
                       onChange={(e) => setTimezone(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422]"
+                      disabled={!isSuperAdmin}
+                      className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-[#0a1422] transition-all ${
+                        !isSuperAdmin
+                          ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed select-none'
+                          : 'border-gray-300 bg-white text-gray-900 focus:border-[#0a1422]'
+                      }`}
                     >
                       <option value="America/New_York">Eastern Time (US & Canada)</option>
                       <option value="Europe/London">London (GMT)</option>
                       <option value="Asia/Kolkata">India Standard Time (IST)</option>
                     </select>
+                    <p className="mt-1.5 text-xs text-gray-500">Used for displaying complaint dates, reports, and notification schedules.</p>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
@@ -372,11 +389,7 @@ export default function Settings() {
                       <option value="5">5 Years</option>
                       <option value="never">Keep Forever</option>
                     </select>
-                    {!isSuperAdmin && (
-                      <p className="mt-1.5 text-xs text-gray-500">
-                        Data retention changes affect legal and compliance deletion schedules. Contact a Super Administrator to adjust these parameters.
-                      </p>
-                    )}
+                    <p className="mt-1.5 text-xs text-gray-500">Controls how long complaint records are kept according to institution policy.</p>
                   </div>
                 </div>
               )}
@@ -410,7 +423,10 @@ export default function Settings() {
                 ) : (
                   <>
                     <Save size={16} className="mr-2" aria-hidden="true" />
-                    Save Changes
+                    {activeTab === 'profile' && 'Save Profile Changes'}
+                    {activeTab === 'notifications' && 'Save Notification Preferences'}
+                    {activeTab === 'security' && 'Update Password'}
+                    {activeTab === 'system' && 'Save System Preferences'}
                   </>
                 )}
               </button>

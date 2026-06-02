@@ -54,7 +54,7 @@ export default function RecentActivityFeed({ complaints = [], isLoading = false 
     >
       <div className="px-5 pt-5 pb-3 shrink-0 border-b border-[#e5e7eb]">
         <h3 className="text-sm font-semibold text-[#0a1422] leading-tight tracking-tight">
-          Recent Activity
+          Recent Complaints Needing Attention
         </h3>
         <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
           Latest complaints needing attention

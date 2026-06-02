@@ -34,6 +34,7 @@ export default function ComplaintHistory() {
 
   const complaints = data?.complaints || [];
   const showHistoryLoading = isLoading || isFetching;
+  const hasActiveFilters = Boolean(status || debouncedSearch);
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
@@ -45,7 +46,7 @@ export default function ComplaintHistory() {
           <div>
             <h1 className="font-display-lg text-display-lg text-primary mb-2 font-bold">Complaint History</h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
-              Track real-time status transitions, assigned departments, and resolution updates of your submitted concerns.
+              Review your submitted complaints and track their latest progress.
             </p>
           </div>
           <button
@@ -53,7 +54,7 @@ export default function ComplaintHistory() {
             className="bg-primary text-white border border-transparent rounded-xl px-5 py-3 font-semibold text-sm hover:bg-gray-800 hover:shadow-md transition-all flex items-center justify-center gap-2 w-full md:w-auto self-start shadow-sm cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
-            Submit New Complaint
+            File New Complaint
           </button>
         </div>
 
@@ -72,7 +73,7 @@ export default function ComplaintHistory() {
                   setPage(1);
                 }}
                 className="w-full h-[46px] pl-11 pr-4 bg-surface-container-low/50 hover:bg-surface border border-outline-variant/60 rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all placeholder:text-outline/70"
-                placeholder="Search by ID, title, category..."
+                placeholder="Search by title, location, or category"
                 type="text"
               />
             </div>
@@ -80,7 +81,7 @@ export default function ComplaintHistory() {
             {/* Status Filters */}
             <div className="flex gap-2 overflow-x-auto w-full no-scrollbar pb-1 lg:pb-0 items-center lg:justify-end">
               <span className="font-label-md text-label-md text-outline mr-2 flex-shrink-0 uppercase font-bold tracking-wider">
-                Filter status:
+                Filter by Status:
               </span>
               <button
                 onClick={() => {
@@ -119,7 +120,7 @@ export default function ComplaintHistory() {
                     : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/60 hover:bg-surface-container-low'
                 }`}
               >
-                In Review
+                In Progress
               </button>
               <button
                 onClick={() => {
@@ -144,6 +145,8 @@ export default function ComplaintHistory() {
           pagination={data?.pagination}
           isLoading={showHistoryLoading}
           onPageChange={setPage}
+          emptyTitle={hasActiveFilters ? "No matching complaints found." : "No complaints submitted yet."}
+          emptyDescription={hasActiveFilters ? "Try changing the search or status filter." : "File your first complaint so the admin team can review and take action."}
         />
       </main>
     </div>

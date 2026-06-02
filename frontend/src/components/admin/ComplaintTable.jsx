@@ -5,6 +5,7 @@
 //   complaints — array of complaint objects
 //   isLoading  — boolean — shows skeleton rows when true
 //   onRowClick — function(complaint) called when "View Details" or the row is clicked
+//   isFiltered — boolean — indicates if active filters are applied
 
 import { formatDate } from '../../utils/formatDate';
 import { useSystemTimezone } from '../../context/TimezoneContext';
@@ -35,9 +36,9 @@ function TableSkeleton() {
  * ComplaintTable — displays a list of complaints in a structured table.
  * Mobile responsive: wraps in overflow-x-auto and hides less critical columns on small screens.
  *
- * @param {{ complaints: Array, isLoading: boolean, onRowClick: (complaint) => void }} props
+ * @param {{ complaints: Array, isLoading: boolean, onRowClick: (complaint) => void, isFiltered?: boolean }} props
  */
-export default function ComplaintTable({ complaints = [], isLoading = false, onRowClick }) {
+export default function ComplaintTable({ complaints = [], isLoading = false, onRowClick, isFiltered = false }) {
   const { timezone } = useSystemTimezone();
 
   return (
@@ -65,8 +66,12 @@ export default function ComplaintTable({ complaints = [], isLoading = false, onR
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 mb-3">
                       <Inbox size={24} className="text-gray-400" aria-hidden="true" />
                     </span>
-                    <p className="text-sm font-medium text-gray-900">No complaints found</p>
-                    <p className="mt-1 text-xs text-gray-500">Try adjusting your filters or search query.</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {isFiltered ? "No matching complaints found." : "No complaints found."}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {isFiltered ? "Try clearing filters or changing your search." : "New student complaints will appear here when submitted."}
+                    </p>
                   </div>
                 </td>
               </tr>

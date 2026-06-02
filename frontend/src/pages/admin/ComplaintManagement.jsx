@@ -70,9 +70,10 @@ export default function ComplaintManagement() {
     setFilters((prev) => ({ ...prev, page: newPage }));
   }
 
-  function handleRowClick(complaint) {
+  // Row selection handler
+  const handleRowClick = useCallback((complaint) => {
     setSelectedComplaint(complaint);
-  }
+  }, []);
 
   function closePanel() {
     setSelectedComplaint(null);
@@ -89,15 +90,17 @@ export default function ComplaintManagement() {
     exportCSV(filters);
   }
 
+  const isFiltered = Boolean(filters.search || filters.status || filters.priority || filters.category);
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto space-y-6">
       
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/30 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Complaint Database</h1>
+          <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Complaint Management</h1>
           <p className="mt-1 text-sm text-gray-500">
-            View details, assign resolving departments, and review automatically triaged priorities.
+            Search, review, assign, and update student complaints.
           </p>
         </div>
         
@@ -109,7 +112,7 @@ export default function ComplaintManagement() {
           className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a1422] disabled:opacity-50 transition-all cursor-pointer"
         >
           <Download size={16} aria-hidden="true" />
-          Export Dataset
+          Export CSV
         </button>
       </div>
 
@@ -134,6 +137,7 @@ export default function ComplaintManagement() {
           complaints={data.complaints}
           isLoading={isLoading}
           onRowClick={handleRowClick}
+          isFiltered={isFiltered}
         />
         <PaginationControls
           currentPage={filters.page}

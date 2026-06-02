@@ -219,6 +219,7 @@ export default function Navbar() {
               onClick={() => logout()}
               className="hover:text-error transition-colors duration-200 ease-in-out flex items-center p-1.5 rounded-full hover:bg-surface-container-low"
               title="Logout"
+              aria-label="Log out"
             >
               <span className="material-symbols-outlined">logout</span>
             </button>

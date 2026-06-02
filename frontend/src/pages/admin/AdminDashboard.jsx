@@ -89,7 +89,7 @@ export default function AdminDashboard() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-[#0a1422] tracking-tight">Admin Dashboard</h1>
         <p className="text-sm text-gray-500">
-          Monitor campus complaints, resolution metrics, and automated triage trends.
+          Monitor complaint activity, department workload, and resolution progress.
         </p>
       </div>
 
@@ -100,24 +100,28 @@ export default function AdminDashboard() {
           value={isLoading ? '...' : sum.total}
           icon={ListChecks}
           tone="blue"
+          change="All complaints received from students."
         />
         <MetricCard
           label="Pending Review"
           value={isLoading ? '...' : sum.pending}
           icon={AlertCircle}
           tone="amber"
+          change="New complaints waiting for admin action."
+        />
+        <MetricCard
+          label="In Progress"
+          value={isLoading ? '...' : sum.total - sum.pending - sum.resolved < 0 ? 0 : sum.total - sum.pending - sum.resolved}
+          icon={Clock3}
+          tone="indigo"
+          change="Complaints currently assigned or being resolved."
         />
         <MetricCard
           label="Resolved Cases"
           value={isLoading ? '...' : sum.resolved}
           icon={CheckCircle2}
           tone="green"
-        />
-        <MetricCard
-          label="Avg Resolution Time"
-          value={isLoading ? '...' : sum.avgResolutionTime}
-          icon={Clock3}
-          tone="indigo"
+          change="Complaints marked as resolved."
         />
       </div>
 
@@ -219,7 +223,7 @@ export default function AdminDashboard() {
                   stroke="#0a1422"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#0a1422', strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: '#0058be', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#0a1422', strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>

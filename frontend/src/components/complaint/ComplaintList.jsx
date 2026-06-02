@@ -8,7 +8,9 @@ export default function ComplaintList({
   pagination,
   isLoading,
   onPageChange,
-  onComplaintClick
+  onComplaintClick,
+  emptyTitle = "No complaints found",
+  emptyDescription = "Try changing the filters or submit a new complaint."
 }) {
   if (isLoading) {
     return (
@@ -21,8 +23,8 @@ export default function ComplaintList({
   if (!complaints.length) {
     return (
       <EmptyState
-        title="No complaints found"
-        description="Try adjusting filters or submit a new complaint."
+        title={emptyTitle}
+        description={emptyDescription}
       />
     );
   }

@@ -36,13 +36,13 @@ export default function StudentDashboard() {
           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
           <div className="relative z-10 space-y-2">
             <p className="font-label-md text-label-md text-white uppercase tracking-widest font-semibold">
-              Student Portal
+              Student Dashboard
             </p>
             <h1 className="font-display-lg text-display-lg leading-tight font-bold">
               Welcome back, {displayName}
             </h1>
             <p className="font-body-lg text-body-lg text-secondary-fixed-dim/90 max-w-xl">
-              Submit campus complaints, check their status, and follow updates from your history.
+              Track your complaints, latest updates, and resolution progress in one place.
             </p>
           </div>
           <button
@@ -50,7 +50,7 @@ export default function StudentDashboard() {
             className="relative z-10 bg-secondary text-white hover:bg-secondary-container hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 font-semibold rounded-xl px-6 py-3.5 flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
-            Submit New Complaint
+            File New Complaint
           </button>
         </header>
 
@@ -61,10 +61,10 @@ export default function StudentDashboard() {
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
-                  Total Submissions
+                  Total Complaints
                 </span>
                 <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
-                  All filed tickets
+                  All complaints you have submitted.
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
@@ -83,10 +83,10 @@ export default function StudentDashboard() {
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
-                  Under Triage
+                  Pending
                 </span>
                 <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
-                  Awaiting review
+                  Complaints waiting for admin review or action.
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
@@ -105,10 +105,10 @@ export default function StudentDashboard() {
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="font-body-md text-body-md text-on-surface-variant font-medium block">
-                  Resolved Cases
+                  Resolved
                 </span>
                 <span className="text-[11px] text-outline font-semibold uppercase tracking-wider block">
-                  Successfully addressed
+                  Complaints marked as solved by the admin team.
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
@@ -126,7 +126,7 @@ export default function StudentDashboard() {
         {/* Recent Complaints Section */}
         <section className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="font-headline-md text-headline-md text-primary font-bold">Recent Complaints</h2>
+            <h2 className="font-headline-md text-headline-md text-primary font-bold">Recent Complaint Updates</h2>
             {complaints.length > 0 && (
               <button
                 onClick={() => navigate('/history')}
@@ -148,16 +148,16 @@ export default function StudentDashboard() {
                 </span>
               </div>
               <h3 className="font-headline-sm text-headline-sm text-primary mb-2 font-bold">
-                No active complaints
+                No complaints submitted yet.
               </h3>
               <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mx-auto mb-6">
-                You have not filed any complaints yet. When you submit a concern, it will be listed here for live tracking.
+                Submit your first complaint so the admin team can review and take action.
               </p>
               <button
                 onClick={() => navigate('/submit')}
                 className="bg-transparent border border-outline text-primary hover:bg-surface-container-low font-semibold rounded-xl px-6 py-3 transition-colors duration-200 cursor-pointer text-sm"
               >
-                File Your First Complaint
+                File New Complaint
               </button>
             </div>
           ) : (
