@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { getAllComplaints, updateComplaint } from '../api/adminApi';
 import {
+  getComplaintHistory,
   getComplaintById,
   getMyComplaints,
   submitComplaint
@@ -23,12 +24,43 @@ function ensurePagination(meta, count) {
   };
 }
 
-export function useMyComplaints({ status = '', search = '', page = 1, limit = 8 } = {}) {
+export function useMyComplaints({ status = '', page = 1, limit = 8 } = {}) {
   return useQuery({
-    queryKey: ['complaints', 'mine', { status, search, page, limit }],
+    queryKey: ['complaints', 'mine', { status, page, limit }],
     refetchInterval: 30000, // 30s — status changes are not instant; avoids hammering the API
     queryFn: async () => {
-      const data = await getMyComplaints({ status, search, page, limit });
+      const data = await getMyComplaints({ status, page, limit });
+      const complaints = data.complaints || [];
+      return {
+        complaints,
+        pagination: ensurePagination(data.pagination, complaints.length)
+      };
+    }
+  });
+}
+
+export function useComplaintHistory({
+  status = '',
+  search = '',
+  category = '',
+  priority = '',
+  page = 1,
+  limit = 8,
+  sortBy = 'createdAt',
+  sortOrder = 'desc'
+} = {}) {
+  return useQuery({
+    queryKey: [
+      'complaints',
+      'history',
+      { status, search, category, priority, page, limit, sortBy, sortOrder }
+    ],
+    placeholderData: (previousData) => previousData,
+    queryFn: async ({ signal }) => {
+      const data = await getComplaintHistory(
+        { status, search, category, priority, page, limit, sortBy, sortOrder },
+        { signal }
+      );
       const complaints = data.complaints || [];
       return {
         complaints,
@@ -56,6 +88,7 @@ export function useSubmitComplaint() {
     mutationFn: submitComplaint,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['complaints', 'history'] });
     },
     onError: (error) => {
       toast.error(formatApiError(error));

@@ -1,26 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ComplaintList from '../../components/complaint/ComplaintList';
 import Navbar from '../../components/layout/Navbar';
-import Spinner from '../../components/ui/Spinner';
-import { useMyComplaints } from '../../hooks/useComplaints';
+import { useComplaintHistory } from '../../hooks/useComplaints';
+
+function useDebouncedValue(value, delayMs) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delayMs);
+
+    return () => window.clearTimeout(timerId);
+  }, [value, delayMs]);
+
+  return debouncedValue;
+}
 
 export default function ComplaintHistory() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const normalizedSearch = searchTerm.trim();
+  const debouncedSearch = useDebouncedValue(searchTerm.trim(), 400);
 
-  // Querying using standard query hook
-  const { data, isLoading } = useMyComplaints({
+  const { data, isLoading, isFetching } = useComplaintHistory({
     status,
-    search: normalizedSearch,
+    search: debouncedSearch,
     page,
     limit: 6
   });
 
   const complaints = data?.complaints || [];
+  const showHistoryLoading = isLoading || isFetching;
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
@@ -126,18 +139,12 @@ export default function ComplaintHistory() {
         </div>
 
         {/* Complaints Grid List */}
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Spinner />
-          </div>
-        ) : (
-          <ComplaintList
-            complaints={complaints}
-            pagination={data?.pagination}
-            isLoading={false}
-            onPageChange={setPage}
-          />
-        )}
+        <ComplaintList
+          complaints={complaints}
+          pagination={data?.pagination}
+          isLoading={showHistoryLoading}
+          onPageChange={setPage}
+        />
       </main>
     </div>
   );

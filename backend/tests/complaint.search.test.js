@@ -19,14 +19,14 @@ vi.mock('../src/config/prisma.js', () => ({
 }))
 
 const repo = await import('../src/modules/complaint/complaint.repository.js')
-const { complaintListQuerySchema } = await import('../src/modules/complaint/complaint.schema.js')
+const { complaintHistoryQuerySchema, complaintListQuerySchema } = await import('../src/modules/complaint/complaint.schema.js')
 
 describe('student complaint history search', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('accepts a trimmed search query in the student list schema', () => {
+  it('keeps dashboard complaint list schema separate from search filters', () => {
     const result = complaintListQuerySchema.parse({
       search: '  electrical  ',
       page: '1',
@@ -34,7 +34,26 @@ describe('student complaint history search', () => {
     })
 
     expect(result).toEqual({
+      page: 1,
+      limit: 6,
+    })
+  })
+
+  it('accepts trimmed search filters in the student history schema', () => {
+    const result = complaintHistoryQuerySchema.parse({
+      search: '  electrical  ',
+      priority: 'high',
+      sortBy: 'createdAt',
+      sortOrder: 'DESC',
+      page: '1',
+      limit: '6',
+    })
+
+    expect(result).toEqual({
       search: 'electrical',
+      priority: 'HIGH',
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
       page: 1,
       limit: 6,
     })
@@ -77,7 +96,7 @@ describe('student complaint history search', () => {
       .mockResolvedValueOnce([complaint])
       .mockResolvedValueOnce([{ count: 1 }])
 
-    const result = await repo.findComplaintsByUser(complaint.userId, {
+    const result = await repo.findComplaintHistoryByUser(complaint.userId, {
       status: 'OPEN',
       search: 'F35BF067',
       page: 1,
@@ -90,6 +109,8 @@ describe('student complaint history search', () => {
     })
     expect(mocks.queryRaw).toHaveBeenCalledTimes(2)
     expect(mocks.queryRaw.mock.calls[0][0].strings.join('')).toContain('c.id::text ILIKE')
+    expect(mocks.queryRaw.mock.calls[0][0].strings.join('')).toContain('u.name')
+    expect(mocks.queryRaw.mock.calls[0][0].strings.join('')).toContain('c.priority::text')
     expect(mocks.queryRaw.mock.calls[0][0].strings.join('')).toContain('LIMIT')
     expect(mocks.findMany).not.toHaveBeenCalled()
   })

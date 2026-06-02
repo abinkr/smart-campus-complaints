@@ -6,6 +6,11 @@ const statusSchema = z.preprocess(
   z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED'])
 )
 
+const prioritySchema = z.preprocess(
+  value => (typeof value === 'string' ? value.toUpperCase() : value),
+  z.enum(['LOW', 'MEDIUM', 'HIGH'])
+)
+
 export const complaintIdParamSchema = z.object({
   id: z.string().uuid(),
 })
@@ -17,7 +22,18 @@ export const submitComplaintSchema = z.object({
 
 export const complaintListQuerySchema = paginationSchema.extend({
   status: statusSchema.optional(),
+})
+
+export const complaintHistoryQuerySchema = paginationSchema.extend({
+  status: statusSchema.optional(),
+  category: z.string().trim().min(1).max(50).optional(),
+  priority: prioritySchema.optional(),
   search: z.string().trim().min(1).max(200).optional(),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'status', 'priority']).default('createdAt'),
+  sortOrder: z.preprocess(
+    value => (typeof value === 'string' ? value.toLowerCase() : value),
+    z.enum(['asc', 'desc']).default('desc')
+  ),
 })
 
 export const submitFollowUpSchema = z.object({

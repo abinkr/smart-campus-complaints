@@ -12,6 +12,12 @@ const priorityFromApi = {
   LOW: 'low'
 };
 
+const priorityToApi = {
+  high: 'HIGH',
+  medium: 'MEDIUM',
+  low: 'LOW'
+};
+
 const statusFromApi = {
   OPEN: 'open',
   IN_PROGRESS: 'in_progress',
@@ -36,6 +42,7 @@ function normalizeParams(params) {
     Object.entries({
       ...params,
       status: statusToApi[params.status] ?? params.status,
+      priority: priorityToApi[params.priority] ?? params.priority,
       search: params.search?.trim()
     }).filter(([, value]) => value !== '' && value !== null && value !== undefined)
   );
@@ -52,6 +59,18 @@ export async function submitComplaint(formData) {
 
 export async function getMyComplaints(params = {}) {
   const { data } = await axiosInstance.get('/api/complaints/mine', {
+    params: normalizeParams(params)
+  });
+  const complaints = unwrapEnvelope(data) || [];
+  return {
+    complaints: complaints.map(normalizeComplaint),
+    pagination: data.meta
+  };
+}
+
+export async function getComplaintHistory(params = {}, config = {}) {
+  const { data } = await axiosInstance.get('/api/complaints/history', {
+    ...config,
     params: normalizeParams(params)
   });
   const complaints = unwrapEnvelope(data) || [];

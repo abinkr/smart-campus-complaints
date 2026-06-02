@@ -15,6 +15,15 @@ export const getMine = async (req, res) => {
   })
 }
 
+export const getHistory = async (req, res) => {
+  const { data, total } = await complaintService.getComplaintHistory(req.user.id, req.query)
+  return ApiResponse.paginated(res, data, {
+    page: req.query.page,
+    limit: req.query.limit,
+    total,
+  })
+}
+
 export const getOne = async (req, res) => {
   const complaint = await complaintService.getComplaintById(req.params.id, req.user)
   return ApiResponse.ok(res, complaint)

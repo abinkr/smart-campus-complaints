@@ -48,6 +48,16 @@ const logRejectedSideEffects = (results) => {
   }
 }
 
+const studentComplaintCacheKey = (userId, scope, query) => {
+  const filters = Object.fromEntries(
+    Object.entries(query)
+      .filter(([, value]) => value !== undefined && value !== null && value !== '')
+      .sort(([left], [right]) => left.localeCompare(right))
+  )
+
+  return `complaints:user:${userId}:${scope}:${JSON.stringify(filters)}`
+}
+
 export const submitComplaint = async (userId, body, file) => {
   let imageUrl = null
   const text = `${body.title ?? ''} ${body.description ?? ''}`.trim()
@@ -112,9 +122,24 @@ export const submitComplaint = async (userId, body, file) => {
 
 export const getMyComplaints = async (userId, query) =>
   withCache(
-    `complaints:user:${userId}:status:${query.status ?? 'all'}:page:${query.page}:limit:${query.limit}`,
+    studentComplaintCacheKey(userId, 'mine', {
+      status: query.status,
+      page: query.page,
+      limit: query.limit,
+    }),
     60,
-    () => repo.findComplaintsByUser(userId, query)
+    () => repo.findComplaintsByUser(userId, {
+      status: query.status,
+      page: query.page,
+      limit: query.limit,
+    })
+  )
+
+export const getComplaintHistory = async (userId, query) =>
+  withCache(
+    studentComplaintCacheKey(userId, 'history', query),
+    30,
+    () => repo.findComplaintHistoryByUser(userId, query)
   )
 
 export const getComplaintById = async (id, requestingUser) => {

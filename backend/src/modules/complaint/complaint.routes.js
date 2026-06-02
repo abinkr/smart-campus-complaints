@@ -6,6 +6,7 @@ import { uploadImage } from '../../middleware/upload.js'
 import { validate } from '../../middleware/validate.js'
 import { asyncHandler } from '../../utils/asyncHandler.js'
 import {
+  complaintHistoryQuerySchema,
   complaintIdParamSchema,
   complaintListQuerySchema,
   submitComplaintSchema,
@@ -37,6 +38,13 @@ router.get(
   authenticate,
   validate({ query: complaintListQuerySchema }),
   asyncHandler(controller.getMine)
+)
+
+router.get(
+  '/history',
+  authenticate,
+  validate({ query: complaintHistoryQuerySchema }),
+  asyncHandler(controller.getHistory)
 )
 
 router.get(
