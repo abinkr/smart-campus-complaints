@@ -23,12 +23,12 @@ function ensurePagination(meta, count) {
   };
 }
 
-export function useMyComplaints({ status = '', page = 1, limit = 8 } = {}) {
+export function useMyComplaints({ status = '', search = '', page = 1, limit = 8 } = {}) {
   return useQuery({
-    queryKey: ['complaints', 'mine', { status, page }],
+    queryKey: ['complaints', 'mine', { status, search, page, limit }],
     refetchInterval: 30000, // 30s — status changes are not instant; avoids hammering the API
     queryFn: async () => {
-      const data = await getMyComplaints({ status, page, limit });
+      const data = await getMyComplaints({ status, search, page, limit });
       const complaints = data.complaints || [];
       return {
         complaints,

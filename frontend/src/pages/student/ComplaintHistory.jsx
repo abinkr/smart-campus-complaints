@@ -10,22 +10,17 @@ export default function ComplaintHistory() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const normalizedSearch = searchTerm.trim();
+
   // Querying using standard query hook
-  const { data, isLoading } = useMyComplaints({ status, page, limit: 6 });
-
-  const rawComplaints = data?.complaints || [];
-
-  // Filter complaints locally by search term for instant search feedback
-  const filteredComplaints = rawComplaints.filter((complaint) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      complaint.title.toLowerCase().includes(term) ||
-      complaint.description.toLowerCase().includes(term) ||
-      complaint.id.toLowerCase().includes(term) ||
-      (complaint.category && complaint.category.toLowerCase().includes(term))
-    );
+  const { data, isLoading } = useMyComplaints({
+    status,
+    search: normalizedSearch,
+    page,
+    limit: 6
   });
+
+  const complaints = data?.complaints || [];
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
@@ -59,7 +54,10 @@ export default function ComplaintHistory() {
               </span>
               <input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full h-[46px] pl-11 pr-4 bg-surface-container-low/50 hover:bg-surface border border-outline-variant/60 rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all placeholder:text-outline/70"
                 placeholder="Search by ID, title, category..."
                 type="text"
@@ -134,7 +132,7 @@ export default function ComplaintHistory() {
           </div>
         ) : (
           <ComplaintList
-            complaints={filteredComplaints}
+            complaints={complaints}
             pagination={data?.pagination}
             isLoading={false}
             onPageChange={setPage}

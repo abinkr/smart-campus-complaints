@@ -1,15 +1,20 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/prisma.js'
 import { getPrismaSkipTake } from '../../utils/paginate.js'
 
 const COMPLAINT_SUMMARY_SELECT = {
   id: true,
   title: true,
+  description: true,
+  imageUrl: true,
   category: true,
   priority: true,
+  nlpConfidence: true,
   status: true,
   department: true,
   createdAt: true,
   updatedAt: true,
+  resolvedAt: true,
   user: {
     select: {
       id: true,
@@ -58,6 +63,74 @@ export const buildWhereClause = ({ category, priority, status, department, searc
   return where
 }
 
+const buildStudentSearchFilter = (search) => {
+  if (!search) {
+    return Prisma.empty
+  }
+
+  const pattern = `%${search}%`
+  return Prisma.sql`
+    AND (
+      c.id::text ILIKE ${pattern}
+      OR c.title ILIKE ${pattern}
+      OR c.description ILIKE ${pattern}
+      OR COALESCE(c.category, '') ILIKE ${pattern}
+    )
+  `
+}
+
+const buildStudentStatusFilter = (status) => {
+  if (!status) {
+    return Prisma.empty
+  }
+
+  return Prisma.sql`AND c.status::text = ${status}`
+}
+
+const findComplaintsByUserSearch = async (userId, { status, search, page, limit }) => {
+  const skip = (page - 1) * limit
+  const statusFilter = buildStudentStatusFilter(status)
+  const searchFilter = buildStudentSearchFilter(search)
+
+  const [data, countRows] = await Promise.all([
+    prisma.$queryRaw(Prisma.sql`
+      SELECT
+        c.id::text AS id,
+        c.user_id::text AS "userId",
+        c.title,
+        c.description,
+        c.image_url AS "imageUrl",
+        c.category,
+        c.priority::text AS priority,
+        c.nlp_confidence AS "nlpConfidence",
+        c.status::text AS status,
+        c.department,
+        c.created_at AS "createdAt",
+        c.updated_at AS "updatedAt",
+        c.resolved_at AS "resolvedAt"
+      FROM complaints c
+      WHERE c.user_id = ${userId}::uuid
+      ${statusFilter}
+      ${searchFilter}
+      ORDER BY c.created_at DESC
+      LIMIT ${limit}
+      OFFSET ${skip}
+    `),
+    prisma.$queryRaw(Prisma.sql`
+      SELECT COUNT(*)::int AS count
+      FROM complaints c
+      WHERE c.user_id = ${userId}::uuid
+      ${statusFilter}
+      ${searchFilter}
+    `),
+  ])
+
+  return {
+    data,
+    total: Number(countRows[0]?.count ?? 0),
+  }
+}
+
 export const createComplaint = (data) =>
   prisma.complaint.create({
     data,
@@ -70,7 +143,11 @@ export const createComplaint = (data) =>
     },
   })
 
-export const findComplaintsByUser = async (userId, { status, page, limit }) => {
+export const findComplaintsByUser = async (userId, { status, search, page, limit }) => {
+  if (search) {
+    return findComplaintsByUserSearch(userId, { status, search, page, limit })
+  }
+
   const where = {
     userId,
     ...(status && {

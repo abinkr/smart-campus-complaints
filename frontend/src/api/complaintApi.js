@@ -35,7 +35,8 @@ function normalizeParams(params) {
   return Object.fromEntries(
     Object.entries({
       ...params,
-      status: statusToApi[params.status] ?? params.status
+      status: statusToApi[params.status] ?? params.status,
+      search: params.search?.trim()
     }).filter(([, value]) => value !== '' && value !== null && value !== undefined)
   );
 }
