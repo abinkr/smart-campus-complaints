@@ -120,6 +120,12 @@ export function AuthProvider({ children }) {
 
     async function restore() {
       const savedToken = localStorage.getItem('smart_campus_access_token');
+      
+      if (!savedToken) {
+        if (active) setIsLoading(false);
+        return;
+      }
+
       const parsed = parseToken(savedToken);
 
       if (parsed && parsed.exp && Date.now() < (parsed.exp * 1000 - 10000)) {
