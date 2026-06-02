@@ -2,6 +2,10 @@
 
 A comprehensive complaint management platform for campus environments that enables students to submit complaints and allows administrators to track, analyze, and resolve issues efficiently.
 
+### 🔗 Live Demo
+- **Student Portal:** https://smart-campus-student.vercel.app
+- **Admin Portal:** https://smart-campus-admin.vercel.app
+
 ---
 
 ## 📋 Table of Contents
@@ -10,6 +14,8 @@ A comprehensive complaint management platform for campus environments that enabl
 - [Intermediate Level Guide](#intermediate-level-guide)
 - [Advanced Level Guide](#advanced-level-guide)
 - [Quick Start](#quick-start)
+- [Project Information](#project-information)
+- [Language Composition](#language-composition)
 
 ---
 
@@ -17,7 +23,7 @@ A comprehensive complaint management platform for campus environments that enabl
 
 ### What is this project?
 
-**Smart Campus Complaints** is a web application that helps students report problems on campus (like maintenance issues, cleanliness concerns, or facility problems) and helps campus administrators organize and fix those problems.
+**Smart Campus Complaints** is a web application that helps students report problems on campus (like maintenance issues, cleanliness concerns, or facility problems) and helps campus administrators[...]
 
 Think of it like a **suggestion box**, but digital and organized:
 - **Students** use a portal to submit complaints
@@ -841,14 +847,47 @@ docker compose up --build
 
 ---
 
+## 📊 Project Information
+
+### Real-World Use Case
+
+In a real-world campus setting, students frequently encounter broken amenities, cleanliness issues, or infrastructure faults but lack a clear, accountable channel to report them.
+
+- **Students** log into the student portal, fill out a complaint form, attach an image, and provide location details.
+- The **NLP Service** instantly processes the text and assigns an appropriate category (e.g., "Maintenance").
+- **Administrators** monitor a centralized dashboard in the admin portal where they review incoming complaints, update their statuses (Open, In Progress, Resolved), and assign staff.
+- The system generates **Analytics** that give campus management visual trends (e.g., peak complaint times or recurrent issues in specific departments), speeding up response times and improving overall campus experience.
+
+### Why This Project Is Useful
+
+- **For Students:** Provides a straightforward, accessible platform to report issues with transparent status tracking, ensuring their concerns are heard and addressed rather than lost in paperwork or informal channels.
+- **For Administrators:** Centralizes all complaints into one dashboard, offering powerful filtering, searching, and exporting capabilities.
+- **For College Management:** Analytics provide data-driven insights to identify recurring problems, allocate maintenance budgets efficiently, and measure the performance of different campus departments.
+- **For Maintenance Departments:** Streamlines workflows and prioritizes tasks, preventing trivial issues from escalating into major problems.
+
+### Performance Metrics
+
+**Desktop (PageSpeed Insights):**
+- Performance: 100
+- Accessibility: 100
+- Best Practices: 100
+- SEO: 100
+
+**Mobile (PageSpeed Insights):**
+- Performance: 93
+- Accessibility: 100
+- Best Practices: 100
+- SEO: 100
+
+---
+
 ## 📁 Project Structure Summary
 
 ```
 Language Composition:
-- JavaScript: 84.2% (Frontend + Backend)
-- Python: 12.4% (NLP Service)
-- PL/pgSQL: 1.8% (Database procedures)
-- Other: 1.6%
+- JavaScript: 92.4% (Frontend + Backend)
+- Python: 6.2% (NLP Service)
+- Other: 1.4%
 ```
 
 ### Key Files to Know
@@ -858,6 +897,18 @@ Language Composition:
 - **`frontend/src/App.jsx`** - Main frontend component
 - **`nlp-service/app.py`** - AI service entry point
 - **`docker-compose.yml`** - Orchestrates all services
+
+### Technology Stack Summary
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend** | React, Vite, Tailwind CSS | Building interactive user interfaces and styling |
+| **Backend** | Node.js, Express.js | Serving REST API endpoints and managing business logic |
+| **Database** | PostgreSQL (with Prisma ORM) | Relational data modeling and storage |
+| **AI/NLP** | Python, Flask, scikit-learn | Machine learning categorization for incoming complaints |
+| **Storage** | Cloudinary | Cloud storage for uploaded complaint images |
+| **Cache & Queues** | Redis, BullMQ | Fast data caching and background job queuing |
+| **Hosting (Production)** | Vercel, Render | Deployment of web clients and API/NLP services |
 
 ---
 
@@ -878,6 +929,7 @@ Found a bug? Want to add a feature?
 - Check logs: `docker compose logs -f [service-name]`
 - Review `.env.example` files for configuration options
 - Database schema: `backend/prisma/schema.prisma`
+- Project documentation: `docs/SMART_CAMPUS_PROJECT_REPORT.md`
 
 ---
 
