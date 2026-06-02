@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useSubmitComplaint } from '../../hooks/useComplaints';
-import { Sparkles, HelpCircle } from 'lucide-react';
+import { Sparkles, HelpCircle, CloudUpload, X } from 'lucide-react';
 
 const complaintSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters').max(200, 'Title cannot exceed 200 characters'),
@@ -173,9 +173,7 @@ export default function ComplaintForm() {
               className="w-full border-2 border-dashed border-outline-variant hover:border-secondary rounded-2xl bg-surface-container-low/40 hover:bg-surface transition-all duration-300 cursor-pointer p-6 flex flex-col items-center justify-center text-center group"
             >
               <div className="h-12 w-12 rounded-xl bg-surface-container-highest flex items-center justify-center mb-3 group-hover:scale-105 transition-transform text-[#0a1422]">
-                <span className="material-symbols-outlined text-[24px]">
-                  cloud_upload
-                </span>
+                <CloudUpload size={24} />
               </div>
               <p className="font-body-md text-body-md text-on-surface mb-1">
                 <span className="font-bold text-secondary">Click to upload</span> or drag and drop
@@ -213,7 +211,7 @@ export default function ComplaintForm() {
                   }}
                   className="absolute top-4 right-4 bg-primary/80 hover:bg-primary text-white p-1 rounded-full text-xs font-semibold focus:outline-none"
                 >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
+                  <X size={16} />
                 </button>
               </div>
             )}

@@ -4,6 +4,7 @@ import ComplaintList from '../../components/complaint/ComplaintList';
 import Spinner from '../../components/ui/Spinner';
 import { useMyComplaints } from '../../hooks/useComplaints';
 import { useAuth } from '../../hooks/useAuth';
+import { Plus, FolderOpen, Clock, CheckCircle2, ArrowRight, Inbox } from 'lucide-react';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function StudentDashboard() {
             onClick={() => navigate('/submit')}
             className="relative z-10 bg-secondary text-white hover:bg-secondary-container hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 font-semibold rounded-xl px-6 py-3.5 flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <Plus size={18} />
             File New Complaint
           </button>
         </header>
@@ -68,7 +69,7 @@ export default function StudentDashboard() {
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
-                <span className="material-symbols-outlined text-[22px]">folder_copy</span>
+                <FolderOpen size={22} />
               </div>
             </div>
             <div>
@@ -90,7 +91,7 @@ export default function StudentDashboard() {
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-error-container text-on-error-container flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
-                <span className="material-symbols-outlined text-[22px]">pending_actions</span>
+                <Clock size={22} />
               </div>
             </div>
             <div>
@@ -112,7 +113,7 @@ export default function StudentDashboard() {
                 </span>
               </div>
               <div className="w-12 h-12 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
-                <span className="material-symbols-outlined text-[22px]">check_circle</span>
+                <CheckCircle2 size={22} />
               </div>
             </div>
             <div>
@@ -132,7 +133,7 @@ export default function StudentDashboard() {
                 onClick={() => navigate('/history')}
                 className="text-secondary font-label-md text-label-md font-semibold hover:underline flex items-center gap-1 cursor-pointer"
               >
-                View History <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                View History <ArrowRight size={16} />
               </button>
             )}
           </div>
@@ -140,12 +141,7 @@ export default function StudentDashboard() {
           {complaints.length === 0 ? (
             <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-[48px] md:p-[80px] flex flex-col items-center justify-center text-center shadow-sm">
               <div className="w-20 h-20 rounded-full bg-surface-container mb-6 flex items-center justify-center text-outline">
-                <span
-                  className="material-symbols-outlined text-[36px]"
-                  style={{ fontVariationSettings: '"wght" 300' }}
-                >
-                  inbox
-                </span>
+                <Inbox size={36} strokeWidth={1.5} />
               </div>
               <h3 className="font-headline-sm text-headline-sm text-primary mb-2 font-bold">
                 No complaints submitted yet.

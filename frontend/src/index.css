@@ -25,9 +25,6 @@ textarea {
   font: inherit;
 }
 
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 
 .input-base {
   @apply h-[48px] w-full bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface px-4 focus:outline-none focus:border-primary-container focus:ring-0 transition-all duration-200 shadow-sm hover:border-outline;

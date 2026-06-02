@@ -4,7 +4,7 @@ import ActivityTimeline from './ActivityTimeline';
 import { getComplaintById, submitFollowUp } from '../../api/complaintApi';
 import { useSystemTimezone } from '../../context/TimezoneContext';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
-import { Sparkles, MessageSquare, Eye } from 'lucide-react';
+import { Sparkles, MessageSquare, Eye, BookOpen, ChevronRight, Info, Hourglass, CheckCircle2, ChevronsUp, Minus, ChevronDown } from 'lucide-react';
 
 const STATUS_EXPLANATIONS = {
   open: "Your complaint has been submitted and is waiting for admin review.",
@@ -71,28 +71,28 @@ export default function ComplaintCard({ complaint, onClick }) {
     open: {
       label: 'Open',
       bgClass: 'bg-error-container text-on-error-container border border-error-container/30',
-      icon: 'hourglass_empty'
+      icon: Hourglass
     },
     in_progress: {
       label: 'In Progress',
       bgClass: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary-fixed-dim/30',
-      icon: 'visibility'
+      icon: Eye
     },
     resolved: {
       label: 'Resolved',
       bgClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant border border-tertiary-fixed-dim/30',
-      icon: 'check_circle'
+      icon: CheckCircle2
     }
   }[complaint.status?.toLowerCase()] || {
     label: complaint.status || 'Unknown',
     bgClass: 'bg-surface-container-high text-on-surface-variant border border-outline-variant/30',
-    icon: 'info'
+    icon: Info
   };
 
   const priorityConfig = {
-    high: { label: 'High Priority', bgClass: 'bg-red-50 text-red-700 border-red-200', icon: 'priority_high' },
-    medium: { label: 'Medium Priority', bgClass: 'bg-amber-50 text-amber-700 border-amber-200', icon: 'remove' },
-    low: { label: 'Low Priority', bgClass: 'bg-green-50 text-green-700 border-green-200', icon: 'low_priority' }
+    high: { label: 'High Priority', bgClass: 'bg-red-50 text-red-700 border-red-200', icon: ChevronsUp },
+    medium: { label: 'Medium Priority', bgClass: 'bg-amber-50 text-amber-700 border-amber-200', icon: Minus },
+    low: { label: 'Low Priority', bgClass: 'bg-green-50 text-green-700 border-green-200', icon: ChevronDown }
   }[complaint.priority?.toLowerCase()] || null;
 
   // Format AI classification confidence score
@@ -112,9 +112,7 @@ export default function ComplaintCard({ complaint, onClick }) {
           <div className="flex justify-between items-start mb-4 gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <div className={`rounded-full px-3 py-1 font-label-md text-label-md flex items-center gap-1.5 font-semibold ${statusConfig.bgClass}`}>
-                <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: '"FILL" 1' }}>
-                  {statusConfig.icon}
-                </span>
+                {statusConfig.icon && (() => { const Icon = statusConfig.icon; return <Icon size={14} />; })()}
                 {statusConfig.label}
               </div>
               <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider font-mono">
@@ -124,9 +122,7 @@ export default function ComplaintCard({ complaint, onClick }) {
 
             {priorityConfig && (
               <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-bold uppercase tracking-wider ${priorityConfig.bgClass}`}>
-                <span className="material-symbols-outlined text-[13px] font-bold" style={{ fontVariationSettings: '"FILL" 1' }}>
-                  {priorityConfig.icon}
-                </span>
+                {priorityConfig.icon && (() => { const Icon = priorityConfig.icon; return <Icon size={13} />; })()}
                 <span>{priorityConfig.label}</span>
               </div>
             )}
@@ -143,7 +139,7 @@ export default function ComplaintCard({ complaint, onClick }) {
         <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant/40">
           <div className="flex justify-between items-center text-xs text-on-surface-variant font-medium">
             <div className="flex items-center gap-1.5 text-outline">
-              <span className="material-symbols-outlined text-[16px]">menu_book</span>
+              <BookOpen size={16} />
               <span className="capitalize text-primary font-semibold">
                 {complaint.category || 'Classifying...'}
               </span>
@@ -166,9 +162,7 @@ export default function ComplaintCard({ complaint, onClick }) {
               className="text-secondary font-label-md text-label-md font-bold flex items-center gap-1 hover:underline cursor-pointer group"
             >
               Details 
-              <span className="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover:translate-x-0.5">
-                chevron_right
-              </span>
+              <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>
@@ -186,9 +180,7 @@ export default function ComplaintCard({ complaint, onClick }) {
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant/40 pb-4">
               <div className="flex items-center gap-3">
                 <div className={`rounded-full px-3 py-1.5 font-label-md text-label-md font-semibold flex items-center gap-1.5 ${statusConfig.bgClass}`}>
-                  <span className="material-symbols-outlined text-[14px]">
-                    {statusConfig.icon}
-                  </span>
+                  {statusConfig.icon && (() => { const Icon = statusConfig.icon; return <Icon size={14} />; })()}
                   {statusConfig.label}
                 </div>
                 <span className="text-xs text-outline font-semibold tracking-wider font-mono">
@@ -212,7 +204,7 @@ export default function ComplaintCard({ complaint, onClick }) {
 
             {/* Status Meanings & Explanation */}
             <div className="bg-secondary/5 rounded-xl border border-secondary/15 p-4 flex gap-3 items-start">
-              <span className="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">info</span>
+              <Info size={20} className="text-secondary shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-bold text-primary uppercase tracking-wide">Current Status</p>
                 <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">

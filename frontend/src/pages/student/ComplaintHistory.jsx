@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ComplaintList from '../../components/complaint/ComplaintList';
 import Navbar from '../../components/layout/Navbar';
 import { useComplaintHistory } from '../../hooks/useComplaints';
+import { Plus, Search } from 'lucide-react';
 
 function useDebouncedValue(value, delayMs) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -53,7 +54,7 @@ export default function ComplaintHistory() {
             onClick={() => navigate('/submit')}
             className="bg-primary text-white border border-transparent rounded-xl px-5 py-3 font-semibold text-sm hover:bg-gray-800 hover:shadow-md transition-all flex items-center justify-center gap-2 w-full md:w-auto self-start shadow-sm cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <Plus size={18} />
             File New Complaint
           </button>
         </div>
@@ -63,9 +64,7 @@ export default function ComplaintHistory() {
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             {/* Search Bar */}
             <div className="relative w-full lg:w-96 flex-shrink-0">
-              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">
-                search
-              </span>
+              <Search size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
               <input
                 value={searchTerm}
                 onChange={(e) => {

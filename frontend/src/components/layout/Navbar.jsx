@@ -7,6 +7,7 @@ import {
 } from '../../api/notificationApi';
 import { useAuth } from '../../hooks/useAuth';
 import { formatRelativeTime } from '../../utils/formatDate';
+import { ShieldCheck, Bell, BellOff, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -87,7 +88,7 @@ export default function Navbar() {
       <div className="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-16">
         {/* Brand */}
         <div className="font-headline-sm text-headline-sm font-bold text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-[24px]">assured_workload</span>
+          <ShieldCheck size={24} />
           Smart Campus
         </div>
 
@@ -139,7 +140,7 @@ export default function Navbar() {
                 if (nextOpen) loadNotifications();
               }}
             >
-              <span className="material-symbols-outlined">notifications</span>
+              <Bell size={24} />
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-error px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -171,7 +172,7 @@ export default function Navbar() {
                     <div className="px-4 py-6 text-center text-sm text-error">{notificationError}</div>
                   ) : notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-                      <span className="material-symbols-outlined text-outline">notifications_off</span>
+                      <BellOff size={48} className="text-outline" strokeWidth={1} />
                       <p className="mt-2 text-sm font-medium text-on-surface-variant">No notifications yet</p>
                     </div>
                   ) : (
@@ -221,7 +222,7 @@ export default function Navbar() {
               title="Logout"
               aria-label="Log out"
             >
-              <span className="material-symbols-outlined">logout</span>
+              <LogOut size={24} />
             </button>
           </div>
         </div>
