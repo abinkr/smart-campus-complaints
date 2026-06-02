@@ -261,22 +261,22 @@ export default function ComplaintForm() {
             <li className="flex gap-2">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary font-bold text-[10px]">1</span>
               <div>
-                <p className="font-semibold text-primary">Be Descriptive</p>
-                <p>Provide specific details like wing, floor, room number, or landmark.</p>
+                <p className="font-semibold text-primary">Add Exact Location</p>
+                <p>Include block, floor, room or lab, nearby landmark, and how many people are affected.</p>
               </div>
             </li>
             <li className="flex gap-2">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary font-bold text-[10px]">2</span>
               <div>
-                <p className="font-semibold text-primary">Attach Evidence</p>
-                <p>Images help administrators diagnose the issue accurately before sending staff.</p>
+                <p className="font-semibold text-primary">Help AI Classify Correctly</p>
+                <p>Use clear issue words like fire, water leak, Wi-Fi down, electricity failure, or broken equipment.</p>
               </div>
             </li>
             <li className="flex gap-2">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary font-bold text-[10px]">3</span>
               <div>
-                <p className="font-semibold text-primary">Track Progress</p>
-                <p>Receive email updates when status changes and view administrative notes in history timeline.</p>
+                <p className="font-semibold text-primary">Track and Follow Up</p>
+                <p>Check History for status, public updates, assigned department, and add follow-up details if needed.</p>
               </div>
             </li>
           </ol>
