@@ -36,13 +36,13 @@ export default function StudentDashboard() {
           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
           <div className="relative z-10 space-y-2">
             <p className="font-label-md text-label-md text-white uppercase tracking-widest font-semibold">
-              Complaint Dashboard
+              Student Portal
             </p>
             <h1 className="font-display-lg text-display-lg leading-tight font-bold">
-              Manage your campus complaints, {displayName}
+              Welcome back, {displayName}
             </h1>
             <p className="font-body-lg text-body-lg text-secondary-fixed-dim/90 max-w-xl">
-              Submit new issues, monitor triage status, review assigned departments, and add follow-up details from your History timeline.
+              Submit campus complaints, check their status, and follow updates from your history.
             </p>
           </div>
           <button
