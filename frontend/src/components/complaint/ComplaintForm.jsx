@@ -30,15 +30,19 @@ function validateImage(file) {
 
 function AutoClassifiedField({ id, label }) {
   return (
-    <div>
+    <div className="space-y-2">
       <span id={`${id}-label`} className="label-base">{label}</span>
       <div
         id={id}
         aria-labelledby={`${id}-label`}
-        className="min-h-[52px] w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm leading-snug text-on-surface/75 shadow-sm flex items-center gap-2 cursor-not-allowed"
+        className="h-[54px] w-full rounded-xl border border-outline-variant/60 bg-surface-container-low/50 px-3.5 text-on-surface shadow-sm flex items-center gap-3 cursor-not-allowed"
       >
-        <Sparkles size={15} className="text-secondary shrink-0" aria-hidden="true" />
-        <span className="min-w-0">Will be automatically detected by AI</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+          <Sparkles size={16} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 text-sm font-semibold leading-tight text-on-surface/80">
+          Auto-detected by AI
+        </span>
       </div>
     </div>
   );
