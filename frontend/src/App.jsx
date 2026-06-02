@@ -5,7 +5,7 @@ import Spinner from './components/ui/Spinner.jsx';
 import { PORTAL_HOME_PATH, PORTAL_ROLE } from './portalConfig.js';
 import AdminLayout from './layouts/AdminLayout.jsx';
 
-const Login = lazy(() => import('./pages/Login.jsx'));
+import Login from './pages/Login.jsx';
 const Register = lazy(() => import('./pages/Register.jsx'));
 
 // Student Pages
