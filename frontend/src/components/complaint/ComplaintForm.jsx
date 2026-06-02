@@ -245,9 +245,9 @@ export default function ComplaintForm() {
             <Sparkles size={16} />
             <h3 className="text-xs font-bold uppercase tracking-wider">AI Classification</h3>
           </div>
-          <h4 className="text-base font-bold text-white mb-2 leading-snug">Automated Triage Routing</h4>
+          <h4 className="text-base font-bold text-white mb-2 leading-snug">Smart Complaint Triage</h4>
           <p className="text-xs text-gray-300 leading-relaxed">
-            Our machine learning model automatically classifies your ticket into the correct department (e.g. IT, Maintenance) and identifies priority thresholds based on keywords. This reduces human delay and starts investigation faster.
+            Your title and description help the system suggest the complaint category, priority, and department. Clear issue words and impact details help urgent cases reach the right team faster, while admins can still review and update the ticket.
           </p>
         </div>
 
