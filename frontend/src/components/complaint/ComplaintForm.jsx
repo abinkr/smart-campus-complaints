@@ -35,10 +35,10 @@ function AutoClassifiedField({ id, label }) {
       <div
         id={id}
         aria-labelledby={`${id}-label`}
-        className="h-[48px] w-full rounded-lg border border-gray-200 bg-gray-50 px-4 text-body-md text-on-surface/75 shadow-sm flex items-center gap-2 overflow-hidden cursor-not-allowed"
+        className="min-h-[52px] w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm leading-snug text-on-surface/75 shadow-sm flex items-center gap-2 cursor-not-allowed"
       >
         <Sparkles size={15} className="text-secondary shrink-0" aria-hidden="true" />
-        <span className="min-w-0 truncate">Will be automatically detected by AI</span>
+        <span className="min-w-0">Will be automatically detected by AI</span>
       </div>
     </div>
   );
