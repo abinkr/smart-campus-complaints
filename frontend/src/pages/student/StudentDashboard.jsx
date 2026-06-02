@@ -36,13 +36,13 @@ export default function StudentDashboard() {
           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
           <div className="relative z-10 space-y-2">
             <p className="font-label-md text-label-md text-white uppercase tracking-widest font-semibold">
-              Student Hub
+              Complaint Dashboard
             </p>
             <h1 className="font-display-lg text-display-lg leading-tight font-bold">
-              Welcome back, {displayName}
+              Manage your campus complaints, {displayName}
             </h1>
             <p className="font-body-lg text-body-lg text-secondary-fixed-dim/90 max-w-xl">
-              Report campus concerns, track resolution timelines, and verify AI classification details in real-time.
+              Submit new issues, monitor triage status, review assigned departments, and add follow-up details from your History timeline.
             </p>
           </div>
           <button
