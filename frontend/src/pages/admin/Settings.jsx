@@ -212,11 +212,11 @@ export default function Settings() {
             </div>
 
             {/* Body */}
-            <div className="p-6 flex-1 overflow-y-auto">
+            <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
               
               {/* Profile Tab */}
               {activeTab === 'profile' && (
-                <div className="max-w-xl space-y-6">
+                <div className="max-w-2xl space-y-8">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                     <input
@@ -254,36 +254,36 @@ export default function Settings() {
 
               {/* Notifications Tab */}
               {activeTab === 'notifications' && (
-                <div className="max-w-xl space-y-6">
+                <div className="max-w-2xl space-y-8">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Email Notifications</h3>
+                    <h3 className="text-base font-semibold text-gray-900 mb-5 border-b border-gray-100 pb-3">Email Notifications</h3>
                     <div className="space-y-4">
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="flex h-5 items-center">
+                      <label className="flex items-start gap-4 cursor-pointer group bg-gray-50 hover:bg-gray-100/80 p-5 rounded-xl border border-gray-100 transition-colors">
+                        <div className="flex h-5 items-center mt-0.5">
                           <input
                             type="checkbox"
                             checked={emailAlerts}
                             onChange={(e) => setEmailAlerts(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#0a1422] focus:ring-[#0a1422]"
+                            className="h-4 w-4 rounded border-gray-300 text-[#0a1422] focus:ring-[#0a1422] cursor-pointer"
                           />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">Instant Alerts</span>
-                          <span className="text-xs text-gray-500">Receive an email when a high-priority complaint is submitted.</span>
+                          <span className="text-sm font-semibold text-gray-900">Instant Alerts</span>
+                          <span className="text-sm text-gray-500 mt-1">Receive an email when a high-priority complaint is submitted.</span>
                         </div>
                       </label>
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="flex h-5 items-center">
+                      <label className="flex items-start gap-4 cursor-pointer group bg-gray-50 hover:bg-gray-100/80 p-5 rounded-xl border border-gray-100 transition-colors">
+                        <div className="flex h-5 items-center mt-0.5">
                           <input
                             type="checkbox"
                             checked={dailyDigest}
                             onChange={(e) => setDailyDigest(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-[#0a1422] focus:ring-[#0a1422]"
+                            className="h-4 w-4 rounded border-gray-300 text-[#0a1422] focus:ring-[#0a1422] cursor-pointer"
                           />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">Daily Digest</span>
-                          <span className="text-xs text-gray-500">Receive a daily summary of new and resolved complaints.</span>
+                          <span className="text-sm font-semibold text-gray-900">Daily Digest</span>
+                          <span className="text-sm text-gray-500 mt-1">Receive a daily summary of new and resolved complaints.</span>
                         </div>
                       </label>
                     </div>
@@ -293,7 +293,7 @@ export default function Settings() {
 
               {/* Security Tab */}
               {activeTab === 'security' && (
-                <div className="max-w-xl space-y-6">
+                <div className="max-w-2xl space-y-8">
                   <div>
                     <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
                     <input
@@ -336,7 +336,7 @@ export default function Settings() {
 
               {/* System Preferences Tab */}
               {activeTab === 'system' && (
-                <div className="max-w-xl space-y-6">
+                <div className="max-w-2xl space-y-8">
                   {!isSuperAdmin && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
                       <Lock size={16} className="text-amber-600 shrink-0 mt-0.5" />
