@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getAllComplaints, updateComplaint, exportCSV } from '../../api/adminApi';
 import { Download, ListFilter } from 'lucide-react';
 
@@ -25,9 +25,6 @@ export default function ComplaintManagement() {
   // Selected complaint for the detail panel
   const [selectedComplaint, setSelectedComplaint] = useState(null);
 
-  // Debounce timer ref for search input
-  const searchDebounceRef = useRef(null);
-  
   // --- Fetch Logic ---
   const loadComplaints = useCallback(() => {
     let cancelled = false;
@@ -50,19 +47,9 @@ export default function ComplaintManagement() {
     return () => { cancelled = true; };
   }, [filters]);
 
-  // Debounce fetch when filters change (especially for search)
+  // Fetch complaints whenever filters change
   useEffect(() => {
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
-    }
-    
-    searchDebounceRef.current = setTimeout(() => {
-      loadComplaints();
-    }, 300);
-
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
+    loadComplaints();
   }, [filters, loadComplaints]);
 
   // --- Handlers ---

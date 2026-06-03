@@ -13,6 +13,7 @@
 //   setFilters — state setter function from parent
 //   isLoading  — boolean — optionally disables inputs
 
+import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 
 const CATEGORIES = [
@@ -35,6 +36,25 @@ const CATEGORIES = [
  * }} props
  */
 export default function ComplaintFilters({ filters, setFilters, isLoading = false }) {
+  const [localSearch, setLocalSearch] = useState(filters.search || '');
+
+  // Keep local search in sync if filters.search is cleared externally
+  useEffect(() => {
+    if (filters.search === '') {
+      setLocalSearch('');
+    }
+  }, [filters.search]);
+
+  // Debounce the search input to update the parent filters state
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (filters.search !== localSearch) {
+        setFilters((prev) => ({ ...prev, search: localSearch, page: 1 }));
+      }
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [localSearch, filters.search, setFilters]);
+
   const hasActiveFilters =
     filters.search || filters.status || filters.priority || filters.category;
 
@@ -43,6 +63,7 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
   }
 
   function handleClear() {
+    setLocalSearch('');
     setFilters((prev) => ({
       ...prev,
       search: '',
@@ -73,8 +94,8 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               id="search-complaints"
               className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] disabled:opacity-50"
               placeholder="Search complaints, students, locations, or IDs"
-              value={filters.search || ''}
-              onChange={(e) => updateFilter('search', e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               disabled={isLoading}
             />
           </div>
