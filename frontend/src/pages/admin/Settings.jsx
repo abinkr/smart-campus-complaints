@@ -170,7 +170,7 @@ export default function Settings() {
       <div className="flex flex-col md:flex-row gap-6">
         
         {/* Left Navigation */}
-        <nav className="flex md:flex-col gap-2 overflow-x-auto md:w-64 shrink-0" aria-label="Settings navigation">
+        <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible md:w-64 shrink-0 p-1 -m-1" aria-label="Settings navigation">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -183,7 +183,7 @@ export default function Settings() {
                   setSaveMessage('');
                   setErrorMessage('');
                 }}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a1422] ${
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a1422] ${
                   isActive 
                     ? 'bg-white text-[#0a1422] shadow-sm border border-[#e5e7eb]' 
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
