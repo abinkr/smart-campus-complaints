@@ -267,19 +267,21 @@ Public URLs rely on the deployed environments (e.g., Vercel and Render).
 
 ## 20. Current Drawbacks & Limitations
 
-1. **Single Point of Failure in ML:** If the NLP service experiences high latency or crashes, complaint submission might stall if not explicitly handled asynchronously.
-2. **Image Scaling Costs:** Cloudinary is used for image uploads; if users upload large, uncompressed images, bandwidth and storage limits could be reached quickly.
-3. **Database Search Limitation:** PostgreSQL basic indexing is implemented, but full-text search across thousands of complaint descriptions could become slow without a dedicated search engine (like Elasticsearch) or advanced PostgreSQL text-search configurations.
-4. **WebSocket Absence:** The application relies on API polling or manual refreshes for dashboard updates rather than real-time WebSocket connections.
+1. **Image Scaling Costs:** Cloudinary is used for image uploads; if users upload large, uncompressed images, bandwidth and storage limits could be reached quickly.
+2. **Database Search Limitation:** PostgreSQL basic indexing is implemented, but full-text search across thousands of complaint descriptions could become slow without a dedicated search engine (like Elasticsearch) or advanced PostgreSQL text-search configurations.
 
 ## 21. Solutions to Drawbacks
 
-1. **Async NLP Queuing:** Decouple the NLP categorization from the HTTP request cycle using BullMQ. Allow the complaint to be created immediately, then update the category asynchronously.
-2. **Client-Side Compression:** Implement client-side image compression in React before uploading to the backend, drastically reducing upload times and Cloudinary usage.
-3. **Optimized Search:** Implement native PostgreSQL full-text search capabilities (`tsvector`) or connect an external search service.
-4. **Real-time Engine:** Integrate Socket.io or Server-Sent Events (SSE) into the Express backend to push live updates to the Admin dashboard.
+1. **Client-Side Compression:** Implement client-side image compression in React before uploading to the backend, drastically reducing upload times and Cloudinary usage.
+2. **Optimized Search:** Implement native PostgreSQL full-text search capabilities (`tsvector`) or connect an external search service.
 
-## 22. Future Improvement Suggestions
+## 22. Recently Implemented Solutions
+
+- **Async NLP Queuing:** NLP categorization is successfully decoupled from the HTTP request cycle using BullMQ. Complaints are created immediately, and their categories are updated asynchronously in the background.
+- **Real-time Engine (SSE):** Integrated Server-Sent Events (SSE) into the Express backend and React frontend. The system now pushes live updates directly to the Admin dashboard, ensuring administrators instantly see new complaints and status changes without refreshing.
+- **Font Rendering Optimization:** Eliminated third-party render-blocking Google Font requests by migrating all instances of `material-symbols-outlined` to the `lucide-react` SVG icon library, significantly improving Largest Contentful Paint (LCP) and mobile performance.
+
+## 23. Future Improvement Suggestions
 
 - **Mobile Application:** While the web version scores highly on mobile PageSpeed, a dedicated native app (React Native) could offer push notifications and native camera integration for students.
 - **Advanced Predictive Analytics:** Expand the NLP service to predict time-to-resolution or auto-assign complaints to specific personnel based on historical data.
