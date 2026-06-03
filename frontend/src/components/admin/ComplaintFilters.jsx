@@ -96,7 +96,6 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               placeholder="Search complaints, students, locations, or IDs"
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
-              disabled={isLoading}
             />
           </div>
         </div>
@@ -113,7 +112,6 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm text-gray-700 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] disabled:opacity-50"
               value={filters.status || ''}
               onChange={(e) => updateFilter('status', e.target.value)}
-              disabled={isLoading}
             >
               <option value="">Status</option>
               <option value="OPEN">Open</option>
@@ -132,7 +130,6 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm text-gray-700 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] disabled:opacity-50"
               value={filters.priority || ''}
               onChange={(e) => updateFilter('priority', e.target.value)}
-              disabled={isLoading}
             >
               <option value="">Priority</option>
               <option value="HIGH">High</option>
@@ -151,7 +148,6 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-0 text-sm text-gray-700 shadow-sm focus:border-[#0a1422] focus:outline-none focus:ring-1 focus:ring-[#0a1422] disabled:opacity-50"
               value={filters.category || ''}
               onChange={(e) => updateFilter('category', e.target.value)}
-              disabled={isLoading}
             >
               <option value="">Category</option>
               {CATEGORIES.map((cat) => (
@@ -167,7 +163,6 @@ export default function ComplaintFilters({ filters, setFilters, isLoading = fals
             <button
               type="button"
               onClick={handleClear}
-              disabled={isLoading}
               className="flex h-10 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0a1422] disabled:opacity-50"
               aria-label="Clear all filters"
             >
