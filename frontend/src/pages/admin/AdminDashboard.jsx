@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import {
   getSummaryAnalytics,
   getByCategoryAnalytics,
@@ -33,14 +34,14 @@ const PIE_COLORS = {
 };
 
 export default function AdminDashboard() {
+  const { accessToken } = useAuth();
   const [summaryData, setSummaryData] = useState(null);
   const [categoryData, setCategoryData] = useState([]);
   const [trendData, setTrendData] = useState([]);
   const [recent, setRecent] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchData = (cancelled) => {
     setIsLoading(true);
 
     Promise.all([
@@ -62,11 +63,39 @@ export default function AdminDashboard() {
         console.error('Failed to load dashboard data:', error);
         if (!cancelled) setIsLoading(false);
       });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchData(cancelled);
+
+    // Setup Server-Sent Events (SSE) for real-time updates
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const sseUrl = `${baseUrl}/api/realtime/admin${accessToken ? `?token=${accessToken}` : ''}`;
+    const eventSource = new EventSource(sseUrl, { withCredentials: true });
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'COMPLAINT_CREATED' || data.type === 'COMPLAINT_UPDATED') {
+          // Re-fetch data on real-time event without showing loading spinner for a seamless update
+          fetchData(cancelled);
+        }
+      } catch (err) {
+        console.error('Failed to parse SSE event:', err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err);
+      eventSource.close();
+    };
 
     return () => {
       cancelled = true;
+      eventSource.close();
     };
-  }, []);
+  }, [accessToken]);
 
   const sum = {
     total: summaryData?.total ?? 0,

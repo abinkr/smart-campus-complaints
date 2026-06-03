@@ -60,6 +60,8 @@ vi.mock('../src/modules/notification/notification.service.js', () => ({
 vi.mock('../src/utils/logger.js', () => ({
   logger: {
     warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
   },
 }))
 

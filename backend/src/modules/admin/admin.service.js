@@ -5,6 +5,7 @@ import { emailQueue } from '../../queues/email.queue.js'
 import { logger } from '../../utils/logger.js'
 import { streamToCSV } from '../../utils/csvExport.js'
 import { notifyStudentPublicUpdate, notifyStudentStatusUpdate } from '../notification/notification.service.js'
+import { broadcastAdminEvent } from '../realtime/realtime.service.js'
 
 const cacheKeyForList = (filters, pagination) =>
   `admin:complaints:${JSON.stringify({
@@ -80,6 +81,7 @@ export const updateComplaint = async (id, adminId, dto) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_UPDATE' }),
   ]).then(results => {
     for (const result of results) {
       if (result.status === 'rejected') {
@@ -154,6 +156,7 @@ export const submitPublicUpdate = async (id, adminId, body) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_PUBLIC_UPDATE' }),
   ])
 
   return pubUpdate
@@ -186,6 +189,7 @@ export const submitInternalNote = async (id, adminId, body) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_INTERNAL_NOTE' }),
   ])
 
   return intNote
@@ -236,6 +240,7 @@ export const patchStatus = async (id, adminId, body) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_PATCH_STATUS' }),
   ])
 
   return updated
@@ -269,6 +274,7 @@ export const patchAssignment = async (id, adminId, body) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_PATCH_ASSIGNMENT' }),
   ])
 
   return updated
@@ -298,6 +304,7 @@ export const patchPriority = async (id, adminId, body) => {
     invalidateCachePattern('analytics:*'),
     invalidateCachePattern(`complaints:user:${complaint.userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId: id, source: 'ADMIN_PATCH_PRIORITY' }),
   ])
 
   return updated

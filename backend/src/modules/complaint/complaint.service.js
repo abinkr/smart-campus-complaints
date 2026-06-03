@@ -10,6 +10,7 @@ import { ForbiddenError, NotFoundError } from '../../utils/ApiError.js'
 import { invalidateCachePattern, withCache } from '../../utils/cache.js'
 import { logger } from '../../utils/logger.js'
 import { applyClassificationOverrides, classifyComplaintText } from './nlp.classifier.js'
+import { broadcastAdminEvent } from '../realtime/realtime.service.js'
 
 const STATUS_EXPLANATIONS = {
   open: "Your concern has been logged and is awaiting administrative triage.",
@@ -115,6 +116,7 @@ export const submitComplaint = async (userId, body, file) => {
     invalidateCachePattern(`complaints:user:${userId}:*`),
     invalidateCachePattern('admin:complaints:*'),
     invalidateCachePattern('analytics:*'),
+    broadcastAdminEvent('COMPLAINT_CREATED', { complaintId: complaint.id }),
   ]).then(logRejectedSideEffects)
 
   return complaint
@@ -250,6 +252,7 @@ export const submitFollowUp = async (complaintId, studentId, body) => {
     invalidateCachePattern(`complaints:user:${studentId}:*`),
     invalidateCachePattern('admin:complaints:*'),
     invalidateCachePattern('analytics:*'),
+    broadcastAdminEvent('COMPLAINT_UPDATED', { complaintId }),
   ])
 
   return followUp

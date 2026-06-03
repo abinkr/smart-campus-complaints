@@ -43,6 +43,11 @@ vi.mock('../src/config/redis.js', () => ({
     del: vi.fn(),
     scan: vi.fn(),
   },
+  redisSubscriber: {
+    subscribe: vi.fn(),
+    on: vi.fn(),
+    publish: vi.fn(),
+  },
 }))
 
 vi.mock('../src/utils/cache.js', () => ({
