@@ -280,6 +280,7 @@ Public URLs rely on the deployed environments (e.g., Vercel and Render).
 - **Async NLP Queuing:** NLP categorization is successfully decoupled from the HTTP request cycle using BullMQ. Complaints are created immediately, and their categories are updated asynchronously in the background.
 - **Real-time Engine (SSE):** Integrated Server-Sent Events (SSE) into the Express backend and React frontend. The system now pushes live updates directly to the Admin dashboard, ensuring administrators instantly see new complaints and status changes without refreshing.
 - **Font Rendering Optimization:** Eliminated third-party render-blocking Google Font requests by migrating all instances of `material-symbols-outlined` to the `lucide-react` SVG icon library, significantly improving Largest Contentful Paint (LCP) and mobile performance.
+- **Admin Search Bar Optimization:** Implemented local state debouncing on the Admin portal's complaint search filter. This prevents excessive re-renders on every keystroke, matching the smooth performance of the student portal and eliminating UI lag.
 
 ## 23. Future Improvement Suggestions
 
